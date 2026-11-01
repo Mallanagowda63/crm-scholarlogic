@@ -4,7 +4,6 @@ import { cache } from "react";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { getModule, type ModuleId } from "@/lib/modules";
-import { isRole } from "@/lib/roles";
 
 /**
  * Reads the user from the database on every request, so a role change or
@@ -18,7 +17,7 @@ export const getCurrentUser = cache(async () => {
     where: { id: session.user.id },
     select: { id: true, name: true, email: true, role: true, isActive: true },
   });
-  if (!user?.isActive || !isRole(user.role)) return null;
+  if (!user?.isActive) return null;
 
   return { id: user.id, name: user.name, email: user.email, role: user.role };
 });

@@ -1,6 +1,6 @@
 "use server";
 
-import { AuthError } from "next-auth";
+import { AuthError, CredentialsSignin } from "next-auth";
 
 import { signIn, signOut } from "@/auth";
 import { loginSchema } from "@/lib/validations/auth";
@@ -15,7 +15,18 @@ export async function login(input: unknown): Promise<LoginResult> {
     await signIn("credentials", { ...parsed.data, redirect: false });
     return { ok: true };
   } catch (error) {
-    if (error instanceof AuthError) return { ok: false, error: "Incorrect email or password." };
+    if (error instanceof CredentialsSignin) {
+      return {
+        ok: false,
+        error:
+          error.code === "rate_limited"
+            ? "Too many failed attempts. Please wait 15 minutes and try again."
+            : "Incorrect email or password.",
+      };
+    }
+    if (error instanceof AuthError) {
+      return { ok: false, error: "Couldn't sign you in. Please try again." };
+    }
     throw error;
   }
 }

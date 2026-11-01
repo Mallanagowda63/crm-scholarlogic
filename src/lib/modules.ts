@@ -57,7 +57,7 @@ export const MODULES: readonly ModuleDef[] = [
     description: "Conversion, counsellor performance and revenue by course.",
     section: "Overview",
     phase: 7,
-    roles: ["ADMIN"],
+    roles: ["ADMIN", "VIEWER"],
   },
   {
     id: "leads",
@@ -134,7 +134,7 @@ export const MODULES: readonly ModuleDef[] = [
     label: "Settings",
     href: "/settings",
     icon: Settings,
-    description: "Users, roles, pipeline stages, lead sources and branding.",
+    description: "Users, roles, pipeline stages, lead sources, target exams and branding.",
     section: "Admin",
     phase: 8,
     roles: ["ADMIN"],
