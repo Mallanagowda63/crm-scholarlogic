@@ -12,9 +12,18 @@ const compat = new FlatCompat({
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
+    rules: {
+      // Destructuring is how fields get left out of an object here.
+      "@typescript-eslint/no-unused-vars": ["warn", { ignoreRestSiblings: true }],
+    },
+  },
+  {
     ignores: [
       "node_modules/**",
       ".next/**",
+      ".next-test/**",
+      "playwright-report/**",
+      "test-results/**",
       "out/**",
       "build/**",
       "next-env.d.ts",

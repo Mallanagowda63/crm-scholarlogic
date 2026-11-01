@@ -19,7 +19,7 @@ export type ModuleId =
   | "reports"
   | "leads"
   | "students"
-  | "applications"
+  | "admissions"
   | "courses"
   | "tasks"
   | "communication"
@@ -80,11 +80,11 @@ export const MODULES: readonly ModuleDef[] = [
     roles: ["ADMIN", "COUNSELLOR", "ACCOUNTS"],
   },
   {
-    id: "applications",
-    label: "Applications",
-    href: "/applications",
+    id: "admissions",
+    label: "Admissions",
+    href: "/admissions",
     icon: FileText,
-    description: "Track applications, admissions and required documents.",
+    description: "Admissions, documents checklists and batch placement.",
     section: "Student journey",
     phase: 6,
     roles: ["ADMIN", "COUNSELLOR"],

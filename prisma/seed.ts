@@ -142,7 +142,7 @@ async function main() {
   // TRUNCATE skips the row-level triggers that block deletes, so seeding can start clean.
   await db.$executeRaw`TRUNCATE
     "AuditLog", "Notification", "MessageTemplate", "Activity", "Task", "Receipt", "Payment",
-    "Instalment", "FeePlan", "ChecklistItem", "Document", "Application", "DemoClass", "Enrollment",
+    "Instalment", "FeePlan", "ChecklistItem", "Document", "Admission", "DemoClass", "Enrollment",
     "Batch", "Branch", "AcademicRecord", "Student", "Course", "TargetExam", "LeadSource",
     "PipelineStage", "OrgSettings", "LoginAttempt", "User"
     CASCADE`;
@@ -267,10 +267,10 @@ async function main() {
         body: "Dear {{name}},\n\nWelcome to {{course}} at Theta. We're glad to have you with us.",
       },
       {
-        name: "Application received",
+        name: "Admission confirmed",
         channel: "EMAIL",
-        subject: "We've received your application",
-        body: "Dear {{name}},\n\nWe've received your application for {{course}} and will be in touch soon.",
+        subject: "Your admission is confirmed",
+        body: "Dear {{name}},\n\nYour admission to {{course}} at Theta is confirmed. Your first instalment is due on {{due_date}}.",
       },
     ],
   });
@@ -478,7 +478,7 @@ async function main() {
 
     await db.student.update({
       where: { id: student.id },
-      data: { lastContactedAt, nextFollowUpAt },
+      data: { lastContactedAt, nextFollowUpAt, updatedAt: isOpen ? now : subDays(now, int(1, 60)) },
     });
 
     // ---------- Academics ----------
@@ -494,35 +494,9 @@ async function main() {
       });
     }
 
-    // ---------- Application ----------
-    const isAccepted = stageIndex === ADMITTED || stageIndex === ENROLLED;
-    const lostAfterApplying = stageIndex === LOST && lastStep === INTERESTED;
-    if (isAccepted || lostAfterApplying || (stageIndex === INTERESTED && chance(0.5))) {
-      const submittedAt = stepTime(Math.min(lastStep, INTERESTED));
-      const application = await db.application.create({
-        data: {
-          studentId: student.id,
-          courseId: course.id,
-          status: isAccepted
-            ? "ACCEPTED"
-            : lostAfterApplying
-              ? pick(["REJECTED", "WITHDRAWN"] as const)
-              : pick(["SUBMITTED", "UNDER_REVIEW"] as const),
-          submittedAt,
-          decidedAt: isAccepted || lostAfterApplying ? addHours(submittedAt, 12) : null,
-          createdAt: submittedAt,
-        },
-      });
-      for (const item of CHECKLIST) {
-        const completed = isAccepted ? item.isRequired || chance(0.3) : chance(0.55);
-        await db.checklistItem.create({
-          data: { applicationId: application.id, ...item, completedAt: completed ? submittedAt : null },
-        });
-      }
-    }
-
-    // ---------- Fees ----------
-    if (isAccepted) {
+    // ---------- Fees and admission ----------
+    const isAdmitted = stageIndex === ADMITTED || stageIndex === ENROLLED;
+    if (isAdmitted) {
       const discountAmount = chance(0.3) ? rupees(pick([2000, 3000, 5000])) : 0;
       const payable = Math.round(((course.fee - discountAmount) * (10000 + course.gstRateBps)) / 10000);
       const feePlan = await db.feePlan.create({
@@ -536,6 +510,39 @@ async function main() {
           createdAt: addDays(createdAt, 3),
         },
       });
+
+      // Enrolled students have a seat, and most admitted ones have picked a batch.
+      const seat =
+        stageIndex === ENROLLED
+          ? batchesByCourse.get(course.id)!.find((option) => option.filled < option.capacity)!
+          : chance(0.7)
+            ? pick(batchesByCourse.get(course.id)!)
+            : null;
+      const admissionDate = stageIndex === ENROLLED ? addDays(createdAt, 4) : subHours(now, int(6, 72));
+      const admission = await db.admission.create({
+        data: {
+          studentId: student.id,
+          courseId: course.id,
+          batchId: seat?.id,
+          admissionDate,
+          feePlanId: feePlan.id,
+          status: stageIndex === ENROLLED ? "CONFIRMED" : "PENDING",
+          createdAt: admissionDate,
+        },
+      });
+      for (const item of CHECKLIST) {
+        const completed = stageIndex === ENROLLED ? item.isRequired || chance(0.3) : chance(0.55);
+        await db.checklistItem.create({
+          data: { admissionId: admission.id, ...item, completedAt: completed ? admissionDate : null },
+        });
+      }
+
+      if (stageIndex === ENROLLED) {
+        seat!.filled += 1;
+        await db.enrollment.create({
+          data: { studentId: student.id, batchId: seat!.id, enrolledAt: addDays(createdAt, 6) },
+        });
+      }
 
       const baseAmount = Math.floor(payable / plan.instalments);
       const planStart = stageIndex === ENROLLED ? addDays(createdAt, 5) : addDays(now, 7);
@@ -586,14 +593,6 @@ async function main() {
       }
     }
 
-    // ---------- Enrolment ----------
-    if (stageIndex === ENROLLED) {
-      const batch = batchesByCourse.get(course.id)!.find((option) => option.filled < option.capacity)!;
-      batch.filled += 1;
-      await db.enrollment.create({
-        data: { studentId: student.id, batchId: batch.id, enrolledAt: addDays(createdAt, 6) },
-      });
-    }
   }
 
   for (const [stageIndex, { count }] of STAGES.entries()) {
