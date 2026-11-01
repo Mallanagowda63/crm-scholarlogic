@@ -1,6 +1,6 @@
-export const ROLES = ["ADMIN", "COUNSELLOR", "ACCOUNTS", "VIEWER"] as const;
+import type { Role } from "@prisma/client";
 
-export type Role = (typeof ROLES)[number];
+export type { Role };
 
 export const ROLE_LABELS: Record<Role, string> = {
   ADMIN: "Admin",
@@ -8,7 +8,3 @@ export const ROLE_LABELS: Record<Role, string> = {
   ACCOUNTS: "Accounts",
   VIEWER: "Viewer",
 };
-
-export function isRole(value: string): value is Role {
-  return (ROLES as readonly string[]).includes(value);
-}

@@ -1,21 +1,604 @@
-// Phase 1 only defines what authentication needs. The CRM schema arrives in Phase 2.
+// Conventions:
+// - Money is stored as whole paise in Int columns.
+// - GST rates are stored in basis points, so 18% is 1800.
+// - Dates are stored in UTC and shown in Asia/Kolkata.
+// - Student, Application, Payment, FeePlan, Instalment and Receipt can't be hard-deleted.
+//   A database trigger refuses it (see the prevent_hard_delete migration).
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  ADMIN
+  COUNSELLOR
+  ACCOUNTS
+  VIEWER
+}
+
+enum StageType {
+  OPEN
+  WON
+  LOST
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  WITHDRAWN
+}
+
+enum ApplicationStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+enum DocumentStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum PaymentMethod {
+  UPI
+  CASH
+  CARD
+  BANK_TRANSFER
+}
+
+enum TaskType {
+  FOLLOW_UP
+  CALL
+  MEETING
+  OTHER
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TaskStatus {
+  OPEN
+  DONE
+  CANCELLED
+}
+
+enum ActivityType {
+  CALL
+  EMAIL
+  WHATSAPP
+  NOTE
+  STAGE_CHANGE
+  DEMO_CLASS
+}
+
+enum Board {
+  CBSE
+  ICSE
+  STATE
+}
+
+enum BatchMode {
+  OFFLINE
+  ONLINE
+  HYBRID
+}
+
+enum MessageChannel {
+  WHATSAPP
+  EMAIL
+}
+
+// ---------- People ----------
+
 model User {
+  id             String    @id @default(cuid())
+  name           String
+  email          String    @unique
+  phone          String?
+  passwordHash   String
+  role           Role      @default(VIEWER)
+  isActive       Boolean   @default(true)
+  /// The counsellor assigned longest ago gets the next new lead.
+  lastAssignedAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  assignedStudents  Student[]      @relation("StudentAssignee")
+  uploadedDocuments Document[]     @relation("DocumentUploader")
+  verifiedDocuments Document[]     @relation("DocumentVerifier")
+  recordedPayments  Payment[]
+  createdFeePlans   FeePlan[]
+  assignedTasks     Task[]         @relation("TaskAssignee")
+  createdTasks      Task[]         @relation("TaskCreator")
+  activities        Activity[]
+  notifications     Notification[]
+  auditLogs         AuditLog[]
+  demoClasses       DemoClass[]
+
+  @@index([role, isActive, lastAssignedAt])
+}
+
+/// One record from first enquiry onward. The UI calls it a lead until the
+/// student reaches a WON stage, then a student.
+model Student {
+  id              String    @id @default(cuid())
+  name            String
+  /// E.164 format, such as +919876543210. Not unique because siblings can share a number.
+  phone           String
+  alternatePhone  String?
+  email           String?
+  parentName      String?
+  parentPhone     String?
+  city            String?
+  photoUrl        String?
+  /// Such as 9th, 10th, 11th, 12th or Dropper.
+  currentClass    String?
+  board           Board?
+  schoolName      String?
+  budget          Int?
+  preferredIntake String?
+  lostReason      String?
+  lastContactedAt DateTime?
+  nextFollowUpAt  DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+
+  stageId          String
+  stage            PipelineStage @relation(fields: [stageId], references: [id])
+  sourceId         String?
+  source           LeadSource?   @relation(fields: [sourceId], references: [id])
+  courseInterestId String?
+  courseInterest   Course?       @relation(fields: [courseInterestId], references: [id])
+  targetExamId     String?
+  targetExam       TargetExam?   @relation(fields: [targetExamId], references: [id])
+  assignedToId     String?
+  assignedTo       User?         @relation("StudentAssignee", fields: [assignedToId], references: [id])
+
+  academicRecords AcademicRecord[]
+  enrollments     Enrollment[]
+  applications    Application[]
+  documents       Document[]
+  feePlans        FeePlan[]
+  tasks           Task[]
+  activities      Activity[]
+  demoClasses     DemoClass[]
+
+  @@index([targetExamId])
+  @@index([phone])
+  @@index([parentPhone])
+  @@index([email])
+  @@index([stageId, deletedAt])
+  @@index([assignedToId, deletedAt])
+  @@index([sourceId])
+  @@index([nextFollowUpAt])
+  @@index([lastContactedAt])
+  @@index([createdAt])
+}
+
+model AcademicRecord {
+  id            String   @id @default(cuid())
+  studentId     String
+  student       Student  @relation(fields: [studentId], references: [id])
+  qualification String
+  institution   String
+  year          Int
+  /// Free text because boards report percentages, CGPA and grades.
+  score         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([studentId])
+}
+
+// ---------- Pipeline ----------
+
+model PipelineStage {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  color    String
+  position Int
+  type     StageType @default(OPEN)
+
+  students Student[]
+
+  @@index([position])
+}
+
+model LeadSource {
+  id       String  @id @default(cuid())
+  name     String  @unique
+  isActive Boolean @default(true)
+
+  students Student[]
+}
+
+/// The list of exams students prepare for, managed in Settings.
+model TargetExam {
+  id       String  @id @default(cuid())
+  name     String  @unique
+  position Int
+  isActive Boolean @default(true)
+
+  students Student[]
+
+  @@index([position])
+}
+
+// ---------- Courses ----------
+
+model Course {
+  id             String   @id @default(cuid())
+  code           String   @unique
+  name           String
+  description    String?
+  fee            Int
+  durationMonths Int
+  gstRateBps     Int      @default(1800)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  batches            Batch[]
+  interestedStudents Student[]
+  applications       Application[]
+  feePlans           FeePlan[]
+  demoClasses        DemoClass[]
+}
+
+/// A Theta centre.
+model Branch {
+  id       String  @id @default(cuid())
+  name     String  @unique
+  city     String?
+  address  String?
+  isActive Boolean @default(true)
+
+  batches Batch[]
+}
+
+model Batch {
+  id        String    @id @default(cuid())
+  courseId  String
+  course    Course    @relation(fields: [courseId], references: [id])
+  /// Empty for online batches that don't belong to a centre.
+  branchId  String?
+  branch    Branch?   @relation(fields: [branchId], references: [id])
+  name      String
+  /// Such as Mon–Fri 4–6 PM.
+  timing    String?
+  mode      BatchMode @default(OFFLINE)
+  startDate DateTime
+  endDate   DateTime?
+  capacity  Int
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  enrollments  Enrollment[]
+  applications Application[]
+  demoClasses  DemoClass[]
+
+  @@unique([courseId, name])
+  @@index([branchId])
+  @@index([startDate])
+}
+
+/// A trial class, the main conversion step. A database constraint requires a
+/// batch or a course. See the demo_class_target migration.
+model DemoClass {
   id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  /// One of ROLES in src/lib/roles.ts. SQLite has no enum type.
-  role         String   @default("VIEWER")
-  isActive     Boolean  @default(true)
+  studentId    String
+  student      Student  @relation(fields: [studentId], references: [id])
+  batchId      String?
+  batch        Batch?   @relation(fields: [batchId], references: [id])
+  courseId     String?
+  course       Course?  @relation(fields: [courseId], references: [id])
+  scheduledAt  DateTime
+  /// Empty until the class has happened, so "not yet" differs from "didn't attend".
+  attended     Boolean?
+  feedback     String?
+  counsellorId String
+  counsellor   User     @relation(fields: [counsellorId], references: [id])
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  @@index([studentId])
+  @@index([counsellorId, scheduledAt])
+  @@index([scheduledAt])
+}
+
+model Enrollment {
+  id         String           @id @default(cuid())
+  studentId  String
+  student    Student          @relation(fields: [studentId], references: [id])
+  batchId    String
+  batch      Batch            @relation(fields: [batchId], references: [id])
+  status     EnrollmentStatus @default(ACTIVE)
+  enrolledAt DateTime         @default(now())
+
+  @@unique([studentId, batchId])
+  @@index([batchId, status])
+}
+
+// ---------- Admissions ----------
+
+model Application {
+  id          String            @id @default(cuid())
+  studentId   String
+  student     Student           @relation(fields: [studentId], references: [id])
+  courseId    String
+  course      Course            @relation(fields: [courseId], references: [id])
+  batchId     String?
+  batch       Batch?            @relation(fields: [batchId], references: [id])
+  status      ApplicationStatus @default(DRAFT)
+  notes       String?
+  submittedAt DateTime?
+  decidedAt   DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  deletedAt   DateTime?
+
+  checklistItems ChecklistItem[]
+
+  @@index([studentId, deletedAt])
+  @@index([status, deletedAt])
+  @@index([courseId])
+}
+
+model ChecklistItem {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id])
+  name          String
+  isRequired    Boolean     @default(true)
+  completedAt   DateTime?
+  documentId    String?
+  document      Document?   @relation(fields: [documentId], references: [id])
+
+  @@index([applicationId])
+}
+
+model Document {
+  id           String         @id @default(cuid())
+  studentId    String
+  student      Student        @relation(fields: [studentId], references: [id])
+  type         String
+  fileName     String
+  fileUrl      String
+  status       DocumentStatus @default(PENDING)
+  uploadedById String?
+  uploadedBy   User?          @relation("DocumentUploader", fields: [uploadedById], references: [id])
+  verifiedById String?
+  verifiedBy   User?          @relation("DocumentVerifier", fields: [verifiedById], references: [id])
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  checklistItems ChecklistItem[]
+
+  @@index([studentId])
+}
+
+// ---------- Fees ----------
+
+model FeePlan {
+  id             String    @id @default(cuid())
+  studentId      String
+  student        Student   @relation(fields: [studentId], references: [id])
+  courseId       String
+  course         Course    @relation(fields: [courseId], references: [id])
+  /// Course fee before discount and GST.
+  totalAmount    Int
+  discountAmount Int       @default(0)
+  gstRateBps     Int
+  notes          String?
+  createdById    String?
+  createdBy      User?     @relation(fields: [createdById], references: [id])
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  /// Plans can't be deleted, so a mistaken plan is cancelled instead.
+  cancelledAt    DateTime?
+
+  instalments Instalment[]
+  payments    Payment[]
+
+  @@index([studentId])
+  @@index([courseId])
+}
+
+model Instalment {
+  id          String    @id @default(cuid())
+  feePlanId   String
+  feePlan     FeePlan   @relation(fields: [feePlanId], references: [id])
+  sequence    Int
+  /// Amount due including GST.
+  amount      Int
+  dueDate     DateTime
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  cancelledAt DateTime?
+
+  payments Payment[]
+
+  @@unique([feePlanId, sequence])
+  @@index([dueDate])
+}
+
+model Payment {
+  id           String        @id @default(cuid())
+  feePlanId    String
+  feePlan      FeePlan       @relation(fields: [feePlanId], references: [id])
+  /// Empty for an advance that isn't tied to one instalment.
+  instalmentId String?
+  instalment   Instalment?   @relation(fields: [instalmentId], references: [id])
+  /// Amount received including GST.
+  amount       Int
+  method       PaymentMethod
+  reference    String?
+  notes        String?
+  paidAt       DateTime
+  recordedById String
+  recordedBy   User          @relation(fields: [recordedById], references: [id])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+
+  receipt Receipt?
+
+  @@index([feePlanId, deletedAt])
+  @@index([instalmentId])
+  @@index([paidAt])
+}
+
+/// Keeps its own copy of the billing details, so later changes to the
+/// course, student or GST settings never alter an issued receipt.
+model Receipt {
+  id            String   @id @default(cuid())
+  paymentId     String   @unique
+  payment       Payment  @relation(fields: [paymentId], references: [id])
+  number        String   @unique
+  /// Numbering restarts each Indian financial year, such as 2026-27.
+  financialYear String
+  sequence      Int
+  issuedAt      DateTime @default(now())
+
+  orgName       String
+  orgAddress    String?
+  orgGstin      String?
+  studentName   String
+  courseName    String
+  gstRateBps    Int
+  taxableAmount Int
+  cgstAmount    Int
+  sgstAmount    Int
+  igstAmount    Int     @default(0)
+  totalAmount   Int
+
+  @@unique([financialYear, sequence])
+}
+
+// ---------- Work ----------
+
+model Task {
+  id          String       @id @default(cuid())
+  title       String
+  description String?
+  type        TaskType     @default(FOLLOW_UP)
+  priority    TaskPriority @default(MEDIUM)
+  status      TaskStatus   @default(OPEN)
+  dueAt       DateTime
+  reminderAt  DateTime?
+  completedAt DateTime?
+  assigneeId  String
+  assignee    User         @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  createdById String?
+  createdBy   User?        @relation("TaskCreator", fields: [createdById], references: [id])
+  studentId   String?
+  student     Student?     @relation(fields: [studentId], references: [id])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([assigneeId, status, dueAt])
+  @@index([studentId])
+  @@index([reminderAt])
+}
+
+model Activity {
+  id         String       @id @default(cuid())
+  studentId  String
+  student    Student      @relation(fields: [studentId], references: [id])
+  type       ActivityType
+  body       String
+  /// Extra details, such as the from and to stages of a stage change.
+  metadata   Json?
+  actorId    String?
+  actor      User?        @relation(fields: [actorId], references: [id])
+  occurredAt DateTime     @default(now())
+  createdAt  DateTime     @default(now())
+
+  @@index([studentId, occurredAt])
+  @@index([actorId, occurredAt])
+}
+
+model MessageTemplate {
+  id        String         @id @default(cuid())
+  name      String         @unique
+  channel   MessageChannel
+  subject   String?
+  /// Supports {{name}}, {{course}} and {{due_date}}.
+  body      String
+  isActive  Boolean        @default(true)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  title     String
+  message   String
+  link      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt, createdAt])
+}
+
+// ---------- System ----------
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id])
+  action     String
+  entityType String
+  entityId   String
+  before     Json?
+  after      Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId, createdAt])
+  @@index([actorId, createdAt])
+  @@index([createdAt])
+}
+
+/// A single row holding organisation-wide settings.
+model OrgSettings {
+  id            String   @id @default("default")
+  name          String
+  legalName     String?
+  address       String?
+  phone         String?
+  email         String?
+  gstin         String?
+  logoUrl       String?
+  primaryColor  String   @default("#4F46E5")
+  accentColor   String   @default("#8B5CF6")
+  receiptPrefix String   @default("RCPT")
+  updatedAt     DateTime @updatedAt
+}
+
+/// One row per sign-in attempt that hasn't succeeded. See src/lib/rate-limit.ts.
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  email     String
+  ip        String
+  createdAt DateTime @default(now())
+
+  @@index([email, ip, createdAt])
+  @@index([email, createdAt])
+  @@index([createdAt])
 }

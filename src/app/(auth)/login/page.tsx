@@ -9,7 +9,7 @@ import { getCurrentUser } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Sign in" };
 
-const JOURNEY = ["Enquiry", "Lead", "Counselling", "Application", "Admission", "Fees", "Enrolled"];
+const JOURNEY = ["Enquiry", "Contacted", "Demo class", "Admission", "Fees", "Enrolled"];
 
 /** Only same-site paths are allowed, so a crafted link can't send people to another website. */
 function safeCallbackUrl(value: string | string[] | undefined) {
