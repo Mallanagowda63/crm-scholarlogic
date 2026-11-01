@@ -30,6 +30,12 @@ export async function requireUser() {
   return user;
 }
 
+/** For Server Actions, which report a failure to the caller instead of redirecting. */
+export async function getUserWithAccess(id: ModuleId) {
+  const user = await getCurrentUser();
+  return user && getModule(id)?.roles.includes(user.role) ? user : null;
+}
+
 export async function requireModuleAccess(id: ModuleId) {
   const user = await requireUser();
   if (!getModule(id)?.roles.includes(user.role)) redirect("/forbidden");

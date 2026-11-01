@@ -2,7 +2,7 @@
 // - Money is stored as whole paise in Int columns.
 // - GST rates are stored in basis points, so 18% is 1800.
 // - Dates are stored in UTC and shown in Asia/Kolkata.
-// - Student, Application, Payment, FeePlan, Instalment and Receipt can't be hard-deleted.
+// - Student, Admission, Payment, FeePlan, Instalment and Receipt can't be hard-deleted.
 //   A database trigger refuses it (see the prevent_hard_delete migration).
 
 generator client {
@@ -33,13 +33,10 @@ enum EnrollmentStatus {
   WITHDRAWN
 }
 
-enum ApplicationStatus {
-  DRAFT
-  SUBMITTED
-  UNDER_REVIEW
-  ACCEPTED
-  REJECTED
-  WITHDRAWN
+enum AdmissionStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
 }
 
 enum DocumentStatus {
@@ -169,7 +166,7 @@ model Student {
 
   academicRecords AcademicRecord[]
   enrollments     Enrollment[]
-  applications    Application[]
+  admissions      Admission[]
   documents       Document[]
   feePlans        FeePlan[]
   tasks           Task[]
@@ -253,7 +250,7 @@ model Course {
 
   batches            Batch[]
   interestedStudents Student[]
-  applications       Application[]
+  admissions         Admission[]
   feePlans           FeePlan[]
   demoClasses        DemoClass[]
 }
@@ -287,9 +284,9 @@ model Batch {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  enrollments  Enrollment[]
-  applications Application[]
-  demoClasses  DemoClass[]
+  enrollments Enrollment[]
+  admissions  Admission[]
+  demoClasses DemoClass[]
 
   @@unique([courseId, name])
   @@index([branchId])
@@ -335,40 +332,47 @@ model Enrollment {
 
 // ---------- Admissions ----------
 
-model Application {
-  id          String            @id @default(cuid())
-  studentId   String
-  student     Student           @relation(fields: [studentId], references: [id])
-  courseId    String
-  course      Course            @relation(fields: [courseId], references: [id])
-  batchId     String?
-  batch       Batch?            @relation(fields: [batchId], references: [id])
-  status      ApplicationStatus @default(DRAFT)
-  notes       String?
-  submittedAt DateTime?
-  decidedAt   DateTime?
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  deletedAt   DateTime?
+/// Created when a student joins after a demo class. Holds the documents
+/// checklist and links to the fee plan.
+model Admission {
+  id            String          @id @default(cuid())
+  studentId     String
+  student       Student         @relation(fields: [studentId], references: [id])
+  courseId      String
+  course        Course          @relation(fields: [courseId], references: [id])
+  /// Empty until a batch is chosen.
+  batchId       String?
+  batch         Batch?          @relation(fields: [batchId], references: [id])
+  admissionDate DateTime
+  /// Empty until accounts sets up the plan.
+  feePlanId     String?         @unique
+  feePlan       FeePlan?        @relation(fields: [feePlanId], references: [id])
+  status        AdmissionStatus @default(PENDING)
+  notes         String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  deletedAt     DateTime?
 
   checklistItems ChecklistItem[]
 
   @@index([studentId, deletedAt])
   @@index([status, deletedAt])
   @@index([courseId])
+  @@index([batchId])
+  @@index([admissionDate])
 }
 
 model ChecklistItem {
-  id            String      @id @default(cuid())
-  applicationId String
-  application   Application @relation(fields: [applicationId], references: [id])
-  name          String
-  isRequired    Boolean     @default(true)
-  completedAt   DateTime?
-  documentId    String?
-  document      Document?   @relation(fields: [documentId], references: [id])
+  id          String    @id @default(cuid())
+  admissionId String
+  admission   Admission @relation(fields: [admissionId], references: [id])
+  name        String
+  isRequired  Boolean   @default(true)
+  completedAt DateTime?
+  documentId  String?
+  document    Document? @relation(fields: [documentId], references: [id])
 
-  @@index([applicationId])
+  @@index([admissionId])
 }
 
 model Document {
@@ -413,6 +417,7 @@ model FeePlan {
 
   instalments Instalment[]
   payments    Payment[]
+  admission   Admission?
 
   @@index([studentId])
   @@index([courseId])
