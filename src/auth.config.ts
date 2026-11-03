@@ -7,14 +7,20 @@ export const authConfig = {
   providers: [],
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
-      if (nextUrl.pathname === "/login" || auth?.user) return true;
+      // The logo is public because the sign-in page shows it.
+      if (nextUrl.pathname === "/login" || nextUrl.pathname === "/branding/logo" || auth?.user) return true;
 
       const loginUrl = new URL("/login", nextUrl);
       loginUrl.searchParams.set("callbackUrl", nextUrl.pathname + nextUrl.search);
       return Response.redirect(loginUrl);
     },
+    jwt({ token, user }) {
+      if (user) token.sessionVersion = user.sessionVersion ?? 0;
+      return token;
+    },
     session({ session, token }) {
       if (token.sub) session.user.id = token.sub;
+      session.sessionVersion = (token.sessionVersion as number | undefined) ?? 0;
       return session;
     },
   },

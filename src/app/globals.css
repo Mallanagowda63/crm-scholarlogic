@@ -50,6 +50,7 @@
 }
 
 :root {
+  --brand-accent: #8b5cf6;
   --radius: 0.75rem;
   --background: oklch(0.984 0.003 247.858);
   --foreground: oklch(0.208 0.042 265.755);

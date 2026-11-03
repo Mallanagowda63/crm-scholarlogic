@@ -1,11 +1,13 @@
 import type { CurrentUser } from "@/lib/session";
 import { recordAudit, type Tx } from "@/server/audit";
 
-/** Moves someone forward to a named stage, but never backward from a later one. */
-export async function advanceToStage(tx: Tx, user: CurrentUser, studentId: string, stageName: string) {
+export type StageKey = "DEMO_SCHEDULED" | "DEMO_ATTENDED" | "ADMITTED";
+
+/** Moves someone forward to a built-in stage, but never backward from a later one. */
+export async function advanceToStage(tx: Tx, user: CurrentUser, studentId: string, stageKey: StageKey) {
   const [student, target] = await Promise.all([
     tx.student.findUniqueOrThrow({ where: { id: studentId }, include: { stage: true } }),
-    tx.pipelineStage.findUnique({ where: { name: stageName } }),
+    tx.pipelineStage.findUnique({ where: { key: stageKey } }),
   ]);
   if (!target || student.stage.type !== "OPEN" || student.stage.position >= target.position) return;
 
@@ -31,6 +33,9 @@ export async function advanceToStage(tx: Tx, user: CurrentUser, studentId: strin
 
 // One lock number for seat counting, so two enrolments can't both take the last seat.
 const SEAT_LOCK = 727002;
+
+/** Work that waits its turn for a lock needs longer than the default 5 seconds, or a busy moment makes it fail. */
+export const LOCKED_TRANSACTION = { maxWait: 10_000, timeout: 30_000 };
 
 export class EnrolmentError extends Error {}
 

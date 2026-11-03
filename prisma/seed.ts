@@ -81,6 +81,12 @@ const STAGES = [
   { name: "Enrolled", color: "#22C55E", type: "WON", count: 30 },
   { name: "Lost", color: "#EF4444", type: "LOST", count: 12 },
 ] as const;
+const STAGE_KEYS: Record<string, string> = {
+  New: "NEW",
+  "Demo Scheduled": "DEMO_SCHEDULED",
+  "Demo Attended": "DEMO_ATTENDED",
+  Admitted: "ADMITTED",
+};
 const DEMO_SCHEDULED = 2;
 const DEMO_ATTENDED = 3;
 const INTERESTED = 4;
@@ -172,7 +178,7 @@ async function main() {
 
   const stages = await Promise.all(
     STAGES.map(({ name, color, type }, position) =>
-      db.pipelineStage.create({ data: { name, color, type, position } }),
+      db.pipelineStage.create({ data: { name, color, type, position, key: STAGE_KEYS[name] ?? null } }),
     ),
   );
   const sources = await Promise.all(SOURCES.map((name) => db.leadSource.create({ data: { name } })));

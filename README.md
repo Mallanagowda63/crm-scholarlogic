@@ -2,9 +2,8 @@
 
 A CRM for Theta, a coaching centre. It manages the student journey: enquiry → contacted → demo class → admission → fee payment → enrolled.
 
-**Status:** Phases 1 to 7 of 8 are complete. This covers the design system, app layout, sign-in, roles, database schema, sample data, the Leads module, the student profile, tasks, the calendar, demo classes, notifications, courses, admissions, fees, PDF receipts, dashboards and reports. Modules from later phases show a page saying which phase delivers them.
+**Status:** All 8 build phases are complete. See [GO_LIVE.md](GO_LIVE.md) for what must be done before production.
 
-See [GO_LIVE.md](GO_LIVE.md) for everything that must be done before production.
 
 ## Requirements
 
@@ -76,6 +75,10 @@ Each role gets its own dashboard. Counsellors see only their own numbers, accoun
 - **Conversion rate:** enrolled, of the enquiries in the period, grouped by when they enquired.
 - **Revenue:** payments received in the period, including GST and leaving out cancelled ones.
 
+## Messages
+
+Templates can use `{{name}}`, `{{course}}` and `{{due_date}}`. The Message button on a profile fills them in for that person, then opens WhatsApp or the email app with the message ready to review. It's logged on the timeline when opened. No message is sent automatically, as no paid WhatsApp or email service is connected.
+
 ## Reminders
 
 A task's reminder becomes a notification the next time its assignee's browser checks, which happens when the app opens and every minute after that. There's no background job, so nothing is sent while nobody has the app open.
@@ -107,6 +110,8 @@ src/app/(app)/courses/  Courses and batches
 src/app/(app)/admissions/ Admissions list
 src/app/(app)/fees/     Fee overview and PDF receipts
 src/app/(app)/reports/  Reports and CSV exports
+src/app/(app)/communication/ Message templates and the contact log
+src/app/(app)/settings/ Users, stages, lists, organisation and branding
 src/server/analytics.ts Numbers behind the dashboards and reports
 assets/fonts/           Fonts embedded in receipts
 scripts/                Command-line tools

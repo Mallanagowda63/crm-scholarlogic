@@ -9,7 +9,7 @@ import { getUserWithAccess, type CurrentUser } from "@/lib/session";
 import { admissionSchema } from "@/lib/validations/fees";
 import { recordAudit } from "@/server/audit";
 import { ownedBy } from "@/server/leads";
-import { advanceToStage, EnrolmentError, takeSeat } from "@/server/stages";
+import { advanceToStage, EnrolmentError, LOCKED_TRANSACTION, takeSeat } from "@/server/stages";
 
 export type AdmissionResult = { ok: true } | { ok: false; error: string };
 
@@ -76,7 +76,7 @@ export async function createAdmission(studentId: unknown, input: unknown): Promi
       await tx.activity.create({
         data: { studentId: student.id, type: "NOTE", body: "Admission created", metadata: { admissionId: admission.id }, actorId: user.id },
       });
-      await advanceToStage(tx, user, student.id, "Admitted");
+      await advanceToStage(tx, user, student.id, "ADMITTED");
       await recordAudit(tx, {
         actorId: user.id,
         action: "admission.created",
@@ -246,7 +246,7 @@ export async function enrolFromAdmission(id: unknown): Promise<AdmissionResult> 
         before: { stage: student.stage.name },
         after: { stage: won.name },
       });
-    });
+    }, LOCKED_TRANSACTION);
     revalidateAdmission(admission.studentId);
     return { ok: true };
   } catch (error) {

@@ -13,7 +13,7 @@ import { leadSchema, type LeadFormValues } from "@/lib/validations/lead";
 import { changedFields, recordAudit, type Tx } from "@/server/audit";
 import { parseLeadCsv, type ImportError } from "@/server/lead-import";
 import { findDuplicates, firstStageId, ownedBy, type DuplicateMatch } from "@/server/leads";
-import { EnrolmentError, releaseSeat, takeSeat } from "@/server/stages";
+import { EnrolmentError, LOCKED_TRANSACTION, releaseSeat, takeSeat } from "@/server/stages";
 import { syncNextFollowUp, viewableWhere } from "@/server/students";
 import { moveOpenWork } from "@/server/tasks";
 
@@ -109,7 +109,7 @@ export async function createLead(input: unknown, allowDuplicates: unknown): Prom
         after: { name: created.name, assignedToId: owner },
       });
       return created;
-    });
+    }, LOCKED_TRANSACTION);
 
     revalidateLeadPages();
     return { ok: true, id: lead.id };

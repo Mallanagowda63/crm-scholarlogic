@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { LeadActionsMenu } from "@/app/(app)/leads/lead-actions-menu";
+import { MessageButton, type TemplateOption } from "@/app/(app)/students/[id]/message-dialog";
 import { FollowUpDialog, LogContactDialog, NoteDialog } from "@/app/(app)/students/[id]/profile-forms";
 import { StageBadge } from "@/components/shared/stage-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,10 +22,12 @@ export function ProfileHeader({
   profile,
   canEdit,
   canManage,
+  templates,
 }: {
   profile: Profile;
   canEdit: boolean;
   canManage: boolean;
+  templates: TemplateOption[];
 }) {
   const router = useRouter();
   const [dialog, setDialog] = useState<OpenDialog>(null);
@@ -82,6 +85,7 @@ export function ProfileHeader({
           )}
           {canEdit && (
             <>
+              <MessageButton student={profile} templates={templates} />
               <Button variant="outline" size="lg" onClick={() => setDialog("note")}>
                 <NotebookPen aria-hidden />
                 Add note

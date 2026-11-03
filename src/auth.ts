@@ -29,7 +29,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!user || !valid || !user.isActive) return null;
 
         await clearLoginAttempts(email, ip);
-        return { id: user.id, name: user.name, email: user.email };
+        return { id: user.id, name: user.name, email: user.email, sessionVersion: user.sessionVersion };
       },
     }),
   ],
