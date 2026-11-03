@@ -2,7 +2,7 @@
 
 Everything that must be done before ScholarLogic goes into production. This is updated at the end of every phase.
 
-*Last updated: Phase 4.*
+*Last updated: Phase 5.*
 
 ## Security upgrades
 
@@ -23,6 +23,11 @@ Everything that must be done before ScholarLogic goes into production. This is u
 - [ ] Run `prisma generate` during the build. The `postinstall` script needs the `prisma` development package, so it fails with `npm install --omit=dev`.
 - [ ] Generate a new `AUTH_SECRET` for production. Don't reuse the development one.
 - [ ] Set `AUTH_TRUST_HOST` only if the host requires it.
+
+## Reminders
+
+- [ ] Decide whether reminders should also go out by email, SMS or WhatsApp. Today they only appear in the notification bell, while someone has the app open or the next time they open it.
+- [ ] Before renaming the **Demo Scheduled** or **Demo Attended** stages in Settings, make sure demo classes can still find them. Scheduling a demo and marking attendance move the student to those stages by name.
 
 ## Business rules to finish
 

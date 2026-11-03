@@ -299,21 +299,22 @@ model Batch {
 /// A trial class, the main conversion step. A database constraint requires a
 /// batch or a course. See the demo_class_target migration.
 model DemoClass {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   studentId    String
-  student      Student  @relation(fields: [studentId], references: [id])
+  student      Student   @relation(fields: [studentId], references: [id])
   batchId      String?
-  batch        Batch?   @relation(fields: [batchId], references: [id])
+  batch        Batch?    @relation(fields: [batchId], references: [id])
   courseId     String?
-  course       Course?  @relation(fields: [courseId], references: [id])
+  course       Course?   @relation(fields: [courseId], references: [id])
   scheduledAt  DateTime
   /// Empty until the class has happened, so "not yet" differs from "didn't attend".
   attended     Boolean?
   feedback     String?
+  cancelledAt  DateTime?
   counsellorId String
-  counsellor   User     @relation(fields: [counsellorId], references: [id])
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  counsellor   User      @relation(fields: [counsellorId], references: [id])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   @@index([studentId])
   @@index([counsellorId, scheduledAt])
@@ -502,27 +503,30 @@ model Receipt {
 // ---------- Work ----------
 
 model Task {
-  id          String       @id @default(cuid())
-  title       String
-  description String?
-  type        TaskType     @default(FOLLOW_UP)
-  priority    TaskPriority @default(MEDIUM)
-  status      TaskStatus   @default(OPEN)
-  dueAt       DateTime
-  reminderAt  DateTime?
-  completedAt DateTime?
-  assigneeId  String
-  assignee    User         @relation("TaskAssignee", fields: [assigneeId], references: [id])
-  createdById String?
-  createdBy   User?        @relation("TaskCreator", fields: [createdById], references: [id])
-  studentId   String?
-  student     Student?     @relation(fields: [studentId], references: [id])
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id             String       @id @default(cuid())
+  title          String
+  description    String?
+  type           TaskType     @default(FOLLOW_UP)
+  priority       TaskPriority @default(MEDIUM)
+  status         TaskStatus   @default(OPEN)
+  dueAt          DateTime
+  reminderAt     DateTime?
+  /// Set once the reminder has become a notification, so it only appears once.
+  reminderSentAt DateTime?
+  completedAt    DateTime?
+  assigneeId     String
+  assignee       User         @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  createdById    String?
+  createdBy      User?        @relation("TaskCreator", fields: [createdById], references: [id])
+  studentId      String?
+  student        Student?     @relation(fields: [studentId], references: [id])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   @@index([assigneeId, status, dueAt])
   @@index([studentId])
   @@index([reminderAt])
+  @@index([dueAt])
 }
 
 model Activity {

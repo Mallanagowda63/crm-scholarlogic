@@ -14,6 +14,7 @@ import { changedFields, recordAudit, type Tx } from "@/server/audit";
 import { parseLeadCsv, type ImportError } from "@/server/lead-import";
 import { findDuplicates, firstStageId, ownedBy, type DuplicateMatch } from "@/server/leads";
 import { syncNextFollowUp, viewableWhere } from "@/server/students";
+import { moveOpenWork } from "@/server/tasks";
 
 export type LeadActionResult =
   | { ok: true; id: string }
@@ -150,6 +151,7 @@ export async function updateLead(id: unknown, input: unknown, allowDuplicates: u
     if (hasChanges) {
       await db.$transaction(async (tx) => {
         await tx.student.update({ where: { id: lead.id }, data });
+        if (canAssign && lead.assignedToId && assignedToId) await moveOpenWork(tx, lead.id, lead.assignedToId, assignedToId);
         await recordAudit(tx, {
           actorId: user.id,
           action: "lead.updated",
@@ -306,6 +308,7 @@ export async function assignLeads(ids: unknown, counsellorId: unknown): Promise<
       async (tx) => {
         for (const lead of leads) {
           await tx.student.update({ where: { id: lead.id }, data: { assignedToId: parsedCounsellor.data } });
+          if (lead.assignedToId) await moveOpenWork(tx, lead.id, lead.assignedToId, parsedCounsellor.data);
           await recordAudit(tx, {
             actorId: user.id,
             action: "lead.assigned",

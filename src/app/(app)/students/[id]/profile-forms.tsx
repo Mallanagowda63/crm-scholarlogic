@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
 import { DOCUMENT_TYPES, MAX_DOCUMENT_BYTES } from "@/lib/students";
+import { REMINDER_OPTIONS } from "@/lib/tasks";
 import {
   academicSchema,
   contactSchema,
@@ -185,7 +186,7 @@ export function LogContactDialog({ studentId, open, onClose }: { studentId: stri
 export function FollowUpDialog({ studentId, open, onClose }: { studentId: string; open: boolean; onClose: () => void }) {
   const { register, handleSubmit, reset, formState } = useForm<z.input<typeof followUpSchema>>({
     resolver: zodResolver(followUpSchema),
-    defaultValues: { title: "", dueAt: "", priority: "MEDIUM" },
+    defaultValues: { title: "", dueAt: "", priority: "MEDIUM", reminderMinutes: "60" },
   });
   const close = () => {
     reset();
@@ -228,6 +229,16 @@ export function FollowUpDialog({ studentId, open, onClose }: { studentId: string
           <NativeSelectOption value="LOW">Low</NativeSelectOption>
           <NativeSelectOption value="MEDIUM">Medium</NativeSelectOption>
           <NativeSelectOption value="HIGH">High</NativeSelectOption>
+        </NativeSelect>
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="follow-up-reminder">Reminder</Label>
+        <NativeSelect id="follow-up-reminder" className="w-full [&>select]:h-10" {...register("reminderMinutes")}>
+          {REMINDER_OPTIONS.map(({ value, label }) => (
+            <NativeSelectOption key={value} value={value}>
+              {label}
+            </NativeSelectOption>
+          ))}
         </NativeSelect>
       </div>
     </FormDialog>

@@ -20,6 +20,7 @@ export const followUpSchema = z.object({
     { message: "Choose a date and time in the future" },
   ),
   priority: z.enum(["LOW", "MEDIUM", "HIGH"]),
+  reminderMinutes: z.enum(["0", "15", "60", "1440"]),
 });
 
 const THIS_YEAR = new Date().getFullYear();

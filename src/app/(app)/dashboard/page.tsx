@@ -5,7 +5,7 @@ import Link from "next/link";
 import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
 import { formatLongDate, greeting } from "@/lib/format";
-import { modulesForRole } from "@/lib/modules";
+import { CURRENT_PHASE, modulesForRole } from "@/lib/modules";
 import { ROLE_LABELS } from "@/lib/roles";
 import { requireModuleAccess } from "@/lib/session";
 
@@ -43,7 +43,7 @@ export default async function DashboardPage() {
             </div>
             <h3 className="mt-4 text-sm font-semibold">{label}</h3>
             <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-            <p className="mt-3 text-xs text-muted-foreground">Arrives in Phase {phase}</p>
+            {phase > CURRENT_PHASE && <p className="mt-3 text-xs text-muted-foreground">Arrives in Phase {phase}</p>}
           </Link>
         ))}
       </div>
