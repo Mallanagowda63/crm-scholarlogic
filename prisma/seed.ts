@@ -562,7 +562,8 @@ async function main() {
         const amount = sequence === plan.instalments ? payable - baseAmount * (plan.instalments - 1) : baseAmount;
         const dueDate = addDays(planStart, (sequence - 1) * 45);
         const instalment = await db.instalment.create({
-          data: { feePlanId: feePlan.id, sequence, amount, dueDate },
+          // The seed writes its own alerts for instalments already due.
+          data: { feePlanId: feePlan.id, sequence, amount, dueDate, overdueNotifiedAt: dueDate <= now ? now : null },
         });
 
         const isDue = dueDate <= now;

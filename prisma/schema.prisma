@@ -430,16 +430,18 @@ model FeePlan {
 }
 
 model Instalment {
-  id          String    @id @default(cuid())
-  feePlanId   String
-  feePlan     FeePlan   @relation(fields: [feePlanId], references: [id])
-  sequence    Int
+  id                String    @id @default(cuid())
+  feePlanId         String
+  feePlan           FeePlan   @relation(fields: [feePlanId], references: [id])
+  sequence          Int
   /// Amount due including GST.
-  amount      Int
-  dueDate     DateTime
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  cancelledAt DateTime?
+  amount            Int
+  dueDate           DateTime
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  cancelledAt       DateTime?
+  /// Set once the overdue alert has gone out, so it only appears once.
+  overdueNotifiedAt DateTime?
 
   payments Payment[]
 

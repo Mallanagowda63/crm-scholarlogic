@@ -33,7 +33,4 @@ export const MAX_DOCUMENT_BYTES = 5 * 1024 * 1024;
 export const ACTIVITY_PAGE_SIZE = 30;
 export const STUDENTS_PAGE_SIZE = 25;
 
-/** What a fee plan comes to after discount and GST. */
-export function payableAmount(plan: { totalAmount: number; discountAmount: number; gstRateBps: number }) {
-  return Math.round(((plan.totalAmount - plan.discountAmount) * (10000 + plan.gstRateBps)) / 10000);
-}
+export { payableAmount } from "@/lib/fees";

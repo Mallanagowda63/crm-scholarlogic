@@ -13,6 +13,7 @@ import { leadSchema, type LeadFormValues } from "@/lib/validations/lead";
 import { changedFields, recordAudit, type Tx } from "@/server/audit";
 import { parseLeadCsv, type ImportError } from "@/server/lead-import";
 import { findDuplicates, firstStageId, ownedBy, type DuplicateMatch } from "@/server/leads";
+import { EnrolmentError, releaseSeat, takeSeat } from "@/server/stages";
 import { syncNextFollowUp, viewableWhere } from "@/server/students";
 import { moveOpenWork } from "@/server/tasks";
 
@@ -206,10 +207,14 @@ export async function getLeadForEdit(id: unknown): Promise<{ ok: true; values: L
 async function applyStageChange(
   tx: Tx,
   user: CurrentUser,
-  lead: { id: string; stageId: string; lostReason: string | null; stage: { name: string } },
+  lead: { id: string; stageId: string; lostReason: string | null; stage: { name: string; type: string } },
   stage: { id: string; name: string; type: string },
   lostReason: string | undefined,
 ) {
+  // Enrolled people hold a seat, so moving in or out of that stage takes or frees one.
+  if (stage.type === "WON") await takeSeat(tx, lead.id);
+  else if (lead.stage.type === "WON") await releaseSeat(tx, lead.id);
+
   const newReason = stage.type === "LOST" ? (lostReason ?? null) : null;
   await tx.student.update({
     where: { id: lead.id },
@@ -261,7 +266,7 @@ export async function changeLeadStages(ids: unknown, stageId: unknown, lostReaso
 
     const leads = await db.student.findMany({
       where: { id: { in: parsedIds.data }, ...ownedBy(user), stageId: { not: stage.id } },
-      select: { id: true, stageId: true, lostReason: true, stage: { select: { name: true } } },
+      select: { id: true, stageId: true, lostReason: true, stage: { select: { name: true, type: true } } },
     });
     if (leads.length === 0) {
       const alreadyThere = await db.student.count({
@@ -280,6 +285,7 @@ export async function changeLeadStages(ids: unknown, stageId: unknown, lostReaso
     revalidateLeadPages();
     return { ok: true, count: leads.length };
   } catch (error) {
+    if (error instanceof EnrolmentError) return { ok: false, error: error.message };
     console.error("changeLeadStages failed", error);
     return { ok: false, error: GENERIC_ERROR };
   }

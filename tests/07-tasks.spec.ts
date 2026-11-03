@@ -587,7 +587,7 @@ test.describe("notifications", () => {
     await signIn(page, "admin");
     const leads = page.getByRole("main").getByRole("link", { name: /^Leads/ });
     await expect(leads).not.toContainText("Arrives in Phase");
-    await expect(page.getByRole("main").getByRole("link", { name: /^Fees/ })).toContainText("Arrives in Phase 6");
+    await expect(page.getByRole("main").getByRole("link", { name: /^Settings/ })).toContainText("Arrives in Phase 8");
   });
 });
 
