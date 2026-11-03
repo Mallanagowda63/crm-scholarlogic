@@ -2,7 +2,7 @@
 
 A CRM for Theta, a coaching centre. It manages the student journey: enquiry → contacted → demo class → admission → fee payment → enrolled.
 
-**Status:** Phases 1 to 6 of 8 are complete. This covers the design system, app layout, sign-in, roles, database schema, sample data, the Leads module, the student profile, tasks, the calendar, demo classes, notifications, courses, admissions, fees and PDF receipts. Modules from later phases show a page saying which phase delivers them.
+**Status:** Phases 1 to 7 of 8 are complete. This covers the design system, app layout, sign-in, roles, database schema, sample data, the Leads module, the student profile, tasks, the calendar, demo classes, notifications, courses, admissions, fees, PDF receipts, dashboards and reports. Modules from later phases show a page saying which phase delivers them.
 
 See [GO_LIVE.md](GO_LIVE.md) for everything that must be done before production.
 
@@ -68,6 +68,14 @@ The seed script refuses to run in production or against a database that isn't on
 - Payments count toward the earliest instalments first.
 - Every payment gets a receipt numbered per Indian financial year, such as `THETA/2026-27/0001`. Cancelling a payment keeps the receipt on record, marked as cancelled, and its number is never reused.
 
+## Dashboards and reports
+
+Each role gets its own dashboard. Counsellors see only their own numbers, accounts sees fees, and viewers see totals and charts without lists naming students.
+
+- **Funnel:** how many people ever reached each stage, so someone lost later still counts for the stages they passed through.
+- **Conversion rate:** enrolled, of the enquiries in the period, grouped by when they enquired.
+- **Revenue:** payments received in the period, including GST and leaving out cancelled ones.
+
 ## Reminders
 
 A task's reminder becomes a notification the next time its assignee's browser checks, which happens when the app opens and every minute after that. There's no background job, so nothing is sent while nobody has the app open.
@@ -98,6 +106,8 @@ src/app/(app)/tasks/    Task list and calendar
 src/app/(app)/courses/  Courses and batches
 src/app/(app)/admissions/ Admissions list
 src/app/(app)/fees/     Fee overview and PDF receipts
+src/app/(app)/reports/  Reports and CSV exports
+src/server/analytics.ts Numbers behind the dashboards and reports
 assets/fonts/           Fonts embedded in receipts
 scripts/                Command-line tools
 src/components/layout/  Sidebar, top bar, command palette, menus
