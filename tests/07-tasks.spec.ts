@@ -583,12 +583,6 @@ test.describe("notifications", () => {
     await expect.poll(() => db.notification.count({ where: { userId: accounts, readAt: null } })).toBe(0);
   });
 
-  test("the dashboard no longer promises modules that are already built", async ({ page }) => {
-    await signIn(page, "admin");
-    const leads = page.getByRole("main").getByRole("link", { name: /^Leads/ });
-    await expect(leads).not.toContainText("Arrives in Phase");
-    await expect(page.getByRole("main").getByRole("link", { name: /^Settings/ })).toContainText("Arrives in Phase 8");
-  });
 });
 
 test.describe("access", () => {

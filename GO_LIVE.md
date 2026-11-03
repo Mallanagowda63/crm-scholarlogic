@@ -2,7 +2,7 @@
 
 Everything that must be done before ScholarLogic goes into production. This is updated at the end of every phase.
 
-*Last updated: Phase 6.*
+*Last updated: Phase 7.*
 
 ## Security upgrades
 
@@ -23,6 +23,10 @@ Everything that must be done before ScholarLogic goes into production. This is u
 - [ ] Run `prisma generate` during the build. The `postinstall` script needs the `prisma` development package, so it fails with `npm install --omit=dev`.
 - [ ] Generate a new `AUTH_SECRET` for production. Don't reuse the development one.
 - [ ] Set `AUTH_TRUST_HOST` only if the host requires it.
+
+## Performance
+
+- [ ] The Fees page, dashboards and reports add up every fee plan and enquiry on each load, which is fine for thousands of records. Check their speed against a realistic copy of the data before launch, and add summary tables if they're slow.
 
 ## Receipts
 
