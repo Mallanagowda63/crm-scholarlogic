@@ -2,7 +2,7 @@
 
 A CRM for Theta, a coaching centre. It manages the student journey: enquiry → contacted → demo class → admission → fee payment → enrolled.
 
-**Status:** Phases 1 to 3 of 8 are complete. This covers the design system, app layout, sign-in, roles, database schema, sample data and the Leads module. Modules from later phases show a page saying which phase delivers them.
+**Status:** Phases 1 to 4 of 8 are complete. This covers the design system, app layout, sign-in, roles, database schema, sample data, the Leads module and the student profile. Modules from later phases show a page saying which phase delivers them.
 
 See [GO_LIVE.md](GO_LIVE.md) for everything that must be done before production.
 
@@ -54,8 +54,17 @@ These exist only in development. The password for all of them is `Theta@12345`.
 | `npm run db:migrate` | Creates a migration after editing the Prisma schema |
 | `npm run db:deploy`  | Applies existing migrations                         |
 | `npm run seed`       | **Erases the local database** and adds sample data  |
+| `npm run create-admin` | Creates an admin account, including in production |
 
 The seed script refuses to run in production or against a database that isn't on this computer.
+
+## Creating an admin
+
+`npm run create-admin` asks for a name, email and password at a prompt. The password is hidden as you type, and is never accepted as a command-line argument, so it stays out of shell history. It refuses to change an existing account.
+
+## Uploaded documents
+
+Files go in `UPLOAD_DIR`, or `uploads/` by default, which isn't served publicly. Downloads go through a route that checks permissions. PDF, JPG, PNG and WebP files up to 5 MB are accepted, judged by their contents rather than their names.
 
 ## Tests
 
@@ -74,6 +83,8 @@ tests/                  Playwright tests, run in file order
 src/app/(auth)/         Sign-in page
 src/app/(app)/          Signed-in pages, wrapped in the app layout
 src/app/(app)/leads/    Leads table, board, forms, import and export
+src/app/(app)/students/ Students list and the student profile
+scripts/                Command-line tools
 src/components/layout/  Sidebar, top bar, command palette, menus
 src/components/shared/  Reusable pieces such as empty states and avatars
 src/components/ui/      shadcn/ui components
@@ -89,7 +100,7 @@ src/server/actions/     Server Actions
 
 Middleware sends signed-out visitors to the sign-in page. Role checks happen on the server in `src/lib/session.ts`, which reads the user from the database on every request. Changing someone's role or deactivating them therefore takes effect immediately.
 
-Counsellors only see and change leads assigned to them, and only admins can reassign or delete. Server Actions enforce this themselves using `getUserWithAccess` and `ownedBy`, so hidden buttons aren't the only protection.
+Counsellors only see and change leads assigned to them, and only admins can reassign or delete. Accounts can see the Overview, Admission and Payments tabs of students with an admission, and can't change anything or open documents. Server Actions enforce this themselves using `getUserWithAccess` and `ownedBy`, so hidden buttons aren't the only protection.
 
 To protect a page, call `requireModuleAccess("module-id")` at the top. Keep skeleton loaders in a `<Suspense>` inside the page, after that call. A `loading.tsx` above the page would start the response before the check runs, so a blocked request would get status 200 instead of a redirect.
 
@@ -104,5 +115,5 @@ Set `x-forwarded-for` from a trusted proxy in production, because clients can fo
 - **One record per person:** `Student` covers someone from first enquiry onward. The UI says "lead" before the Enrolled stage and "student" after it.
 - **Money:** stored as whole paise. GST rates are stored in basis points, so 18% is `1800`.
 - **Dates:** stored in UTC and shown in India time.
-- **Deleting:** `Student`, `Admission` and `Payment` are soft-deleted by setting `deletedAt`. A database trigger blocks `DELETE` on these and on `FeePlan`, `Instalment` and `Receipt`. Cancel a plan or instalment with `cancelledAt`.
+- **Deleting:** `Student`, `AcademicRecord`, `Document`, `Admission` and `Payment` are soft-deleted by setting `deletedAt`. A database trigger blocks `DELETE` on these and on `FeePlan`, `Instalment` and `Receipt`. Cancel a plan or instalment with `cancelledAt`.
 - **Reading soft-deleted data:** top-level queries hide deleted rows automatically. An `include` of those models must add `where: { deletedAt: null }` itself.

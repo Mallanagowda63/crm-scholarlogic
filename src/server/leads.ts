@@ -11,7 +11,7 @@ export function ownedBy(user: CurrentUser): Prisma.StudentWhereInput {
   return user.role === "COUNSELLOR" ? { assignedToId: user.id } : {};
 }
 
-function searchWhere(q: string): Prisma.StudentWhereInput {
+export function searchWhere(q: string): Prisma.StudentWhereInput {
   if (!q) return {};
   const digits = q.replace(/\D/g, "");
   const text = { contains: q, mode: "insensitive" as const };

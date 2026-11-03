@@ -5,6 +5,10 @@ const nextConfig: NextConfig = {
   distDir: process.env.NEXT_DIST_DIR ?? ".next",
   // The badge covers the sidebar collapse button or form buttons, wherever it sits.
   devIndicators: false,
+  experimental: {
+    // Leaves room for form overhead around the 5 MB limit on document uploads.
+    serverActions: { bodySizeLimit: "6mb" },
+  },
 };
 
 export default nextConfig;

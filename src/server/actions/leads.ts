@@ -13,6 +13,7 @@ import { leadSchema, type LeadFormValues } from "@/lib/validations/lead";
 import { changedFields, recordAudit, type Tx } from "@/server/audit";
 import { parseLeadCsv, type ImportError } from "@/server/lead-import";
 import { findDuplicates, firstStageId, ownedBy, type DuplicateMatch } from "@/server/leads";
+import { syncNextFollowUp, viewableWhere } from "@/server/students";
 
 export type LeadActionResult =
   | { ok: true; id: string }
@@ -35,6 +36,11 @@ const ROUND_ROBIN_LOCK = 727001;
 const idSchema = z.string().min(1).max(64);
 const idsSchema = z.array(idSchema).min(1).max(MAX_BULK);
 const lostReasonSchema = z.string().trim().max(200).optional();
+
+function revalidateLeadPages() {
+  revalidatePath("/leads");
+  revalidatePath("/students", "layout");
+}
 
 async function pickNextCounsellor(tx: Tx) {
   await tx.$executeRaw`SELECT pg_advisory_xact_lock(${ROUND_ROBIN_LOCK})`;
@@ -103,7 +109,7 @@ export async function createLead(input: unknown, allowDuplicates: unknown): Prom
       return created;
     });
 
-    revalidatePath("/leads");
+    revalidateLeadPages();
     return { ok: true, id: lead.id };
   } catch (error) {
     console.error("createLead failed", error);
@@ -153,7 +159,7 @@ export async function updateLead(id: unknown, input: unknown, allowDuplicates: u
           after,
         });
       });
-      revalidatePath("/leads");
+      revalidateLeadPages();
     }
     return { ok: true, id: lead.id };
   } catch (error) {
@@ -212,6 +218,8 @@ async function applyStageChange(
       ...(stage.type !== "OPEN" && { nextFollowUpAt: null }),
     },
   });
+  // Reopened leads pick up any follow-ups still waiting.
+  if (stage.type === "OPEN") await syncNextFollowUp(tx, lead.id);
   await tx.activity.create({
     data: {
       studentId: lead.id,
@@ -267,7 +275,7 @@ export async function changeLeadStages(ids: unknown, stageId: unknown, lostReaso
       { timeout: 30_000 },
     );
 
-    revalidatePath("/leads");
+    revalidateLeadPages();
     return { ok: true, count: leads.length };
   } catch (error) {
     console.error("changeLeadStages failed", error);
@@ -311,7 +319,7 @@ export async function assignLeads(ids: unknown, counsellorId: unknown): Promise<
       { timeout: 30_000 },
     );
 
-    revalidatePath("/leads");
+    revalidateLeadPages();
     return { ok: true, count: leads.length };
   } catch (error) {
     console.error("assignLeads failed", error);
@@ -341,7 +349,7 @@ async function setDeleted(id: unknown, deleted: boolean): Promise<SimpleResult> 
       });
     });
 
-    revalidatePath("/leads");
+    revalidateLeadPages();
     return { ok: true, count: 1 };
   } catch (error) {
     console.error("setDeleted failed", error);
@@ -450,7 +458,7 @@ export async function commitLeadImport(text: unknown, includeDuplicates: unknown
       { timeout: 60_000 },
     );
 
-    revalidatePath("/leads");
+    revalidateLeadPages();
     return { ok: true, count: chosen.length };
   } catch (error) {
     console.error("commitLeadImport failed", error);
@@ -458,28 +466,31 @@ export async function commitLeadImport(text: unknown, includeDuplicates: unknown
   }
 }
 
-export type LeadSearchResult = { id: string; name: string; phone: string; stage: string };
+export type PersonSearchResult = { id: string; name: string; phone: string; stage: string };
 
-/** Powers the command palette, and follows the same ownership rules as everything else. */
-export async function searchLeads(query: unknown): Promise<LeadSearchResult[]> {
-  const user = await getUserWithAccess("leads");
+/** Powers the command palette, and follows the same visibility rules as the profile page. */
+export async function searchPeople(query: unknown): Promise<PersonSearchResult[]> {
+  const user = await getUserWithAccess("students");
   const q = z.string().trim().min(2).max(100).safeParse(query);
   if (!user || !q.success) return [];
 
   const digits = q.data.replace(/\D/g, "");
-  const leads = await db.student.findMany({
+  const people = await db.student.findMany({
     where: {
-      ...ownedBy(user),
-      stage: { type: { not: "WON" } },
-      OR: [
-        { name: { contains: q.data, mode: "insensitive" } },
-        { email: { contains: q.data, mode: "insensitive" } },
-        ...(digits.length >= 3 ? [{ phone: { contains: digits } }] : []),
+      AND: [
+        viewableWhere(user),
+        {
+          OR: [
+            { name: { contains: q.data, mode: "insensitive" } },
+            { email: { contains: q.data, mode: "insensitive" } },
+            ...(digits.length >= 3 ? [{ phone: { contains: digits } }] : []),
+          ],
+        },
       ],
     },
     select: { id: true, name: true, phone: true, stage: { select: { name: true } } },
     orderBy: { updatedAt: "desc" },
     take: 6,
   });
-  return leads.map(({ id, name, phone, stage }) => ({ id, name, phone: formatPhone(phone), stage: stage.name }));
+  return people.map(({ id, name, phone, stage }) => ({ id, name, phone: formatPhone(phone), stage: stage.name }));
 }

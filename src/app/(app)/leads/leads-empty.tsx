@@ -3,7 +3,7 @@
 import { SearchX, UserPlus } from "lucide-react";
 import Link from "next/link";
 
-import { useLeadWorkspace } from "@/app/(app)/leads/leads-workspace";
+import { useLeadWorkspace } from "@/app/(app)/leads/lead-dialogs";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";

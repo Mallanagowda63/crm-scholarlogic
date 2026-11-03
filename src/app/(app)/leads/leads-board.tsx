@@ -13,10 +13,10 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { GripVertical, MessageCircle, Phone } from "lucide-react";
+import Link from "next/link";
 import { useOptimistic, useState } from "react";
 
 import { LeadActionsMenu, useStageChanger } from "@/app/(app)/leads/lead-actions-menu";
-import { useLeadWorkspace } from "@/app/(app)/leads/leads-workspace";
 import { StageBadge } from "@/components/shared/stage-badge";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { formatShortDate } from "@/lib/format";
@@ -233,15 +233,13 @@ function LeadCard({
 }
 
 function CardTitle({ lead, isOverlay }: { lead: LeadRow; isOverlay?: boolean }) {
-  const { openEdit } = useLeadWorkspace();
   if (isOverlay) return <p className="min-w-0 flex-1 truncate py-1.5 font-medium">{lead.name}</p>;
   return (
-    <button
-      type="button"
-      onClick={() => openEdit(lead.id)}
-      className="min-w-0 flex-1 truncate rounded py-1.5 text-left font-medium outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+    <Link
+      href={`/students/${lead.id}`}
+      className="min-w-0 flex-1 truncate rounded py-1.5 font-medium outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
     >
       {lead.name}
-    </button>
+    </Link>
   );
 }

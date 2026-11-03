@@ -19,6 +19,27 @@ export function formatShortDate(date: Date) {
   }).format(date);
 }
 
+export function formatDateTime(date: Date) {
+  return new Intl.DateTimeFormat("en-IN", {
+    timeZone: TIME_ZONE,
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(date);
+}
+
+export function formatTime(date: Date) {
+  return new Intl.DateTimeFormat("en-IN", {
+    timeZone: TIME_ZONE,
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(date);
+}
+
 /** Formats paise as rupees with Indian digit grouping, such as ₹1,65,000. */
 export function formatRupees(paise: number) {
   return new Intl.NumberFormat("en-IN", {

@@ -2,7 +2,8 @@
 // - Money is stored as whole paise in Int columns.
 // - GST rates are stored in basis points, so 18% is 1800.
 // - Dates are stored in UTC and shown in Asia/Kolkata.
-// - Student, Admission, Payment, FeePlan, Instalment and Receipt can't be hard-deleted.
+// - Student, AcademicRecord, Document, Admission, Payment, FeePlan, Instalment and Receipt
+//   can't be hard-deleted.
 //   A database trigger refuses it (see the prevent_hard_delete migration).
 
 generator client {
@@ -78,6 +79,7 @@ enum ActivityType {
   NOTE
   STAGE_CHANGE
   DEMO_CLASS
+  FOLLOW_UP
 }
 
 enum Board {
@@ -186,18 +188,19 @@ model Student {
 }
 
 model AcademicRecord {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   studentId     String
-  student       Student  @relation(fields: [studentId], references: [id])
+  student       Student   @relation(fields: [studentId], references: [id])
   qualification String
   institution   String
   year          Int
   /// Free text because boards report percentages, CGPA and grades.
   score         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
 
-  @@index([studentId])
+  @@index([studentId, deletedAt])
 }
 
 // ---------- Pipeline ----------
@@ -381,6 +384,7 @@ model Document {
   student      Student        @relation(fields: [studentId], references: [id])
   type         String
   fileName     String
+  /// The storage key. See src/server/storage.ts.
   fileUrl      String
   status       DocumentStatus @default(PENDING)
   uploadedById String?
@@ -389,10 +393,11 @@ model Document {
   verifiedBy   User?          @relation("DocumentVerifier", fields: [verifiedById], references: [id])
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
+  deletedAt    DateTime?
 
   checklistItems ChecklistItem[]
 
-  @@index([studentId])
+  @@index([studentId, deletedAt])
 }
 
 // ---------- Fees ----------
