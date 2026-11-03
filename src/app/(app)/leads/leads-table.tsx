@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { LeadActionsMenu, useStageChanger } from "@/app/(app)/leads/lead-actions-menu";
-import { useLeadWorkspace } from "@/app/(app)/leads/leads-workspace";
+import { useLeadWorkspace } from "@/app/(app)/leads/lead-dialogs";
 import { StageBadge } from "@/components/shared/stage-badge";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -55,7 +55,6 @@ export function LeadsTable({
   filters: LeadFilters;
   now: Date;
 }) {
-  const { openEdit } = useLeadWorkspace();
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   // Fresh data means the selection may point at rows no longer on this page.
@@ -87,13 +86,12 @@ export function LeadsTable({
         header: () => <SortableHeader filters={filters} sortKey="name" label="Name" />,
         cell: ({ row: { original: lead } }) => (
           <div className="min-w-36">
-            <button
-              type="button"
-              onClick={() => openEdit(lead.id)}
-              className="rounded text-left font-medium outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+            <Link
+              href={`/students/${lead.id}`}
+              className="rounded font-medium outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               {lead.name}
-            </button>
+            </Link>
             <a href={`tel:${lead.phone}`} className="block text-xs text-muted-foreground hover:underline">
               {formatPhone(lead.phone)}
             </a>
@@ -171,7 +169,7 @@ export function LeadsTable({
         meta: { className: "w-10" },
       },
     ],
-    [filters, now, openEdit],
+    [filters, now],
   );
 
   const table = useReactTable({

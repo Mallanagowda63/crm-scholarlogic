@@ -32,6 +32,6 @@ export default defineConfig({
     url: `http://localhost:${PORT}/login`,
     timeout: 240_000,
     reuseExistingServer: false,
-    env: { DATABASE_URL: testUrl.toString(), NEXT_DIST_DIR: ".next-test" },
+    env: { DATABASE_URL: testUrl.toString(), NEXT_DIST_DIR: ".next-test", UPLOAD_DIR: ".next-test/uploads" },
   },
 });

@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
-const SOFT_DELETE_MODELS = new Set(["Student", "Admission", "Payment"]);
+const SOFT_DELETE_MODELS = new Set(["Student", "AcademicRecord", "Document", "Admission", "Payment"]);
 
 const FILTERED_OPERATIONS = new Set([
   "findUnique",

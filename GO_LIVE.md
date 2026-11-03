@@ -2,7 +2,7 @@
 
 Everything that must be done before ScholarLogic goes into production. This is updated at the end of every phase.
 
-*Last updated: Phase 3.*
+*Last updated: Phase 4.*
 
 ## Security upgrades
 
@@ -20,15 +20,29 @@ Everything that must be done before ScholarLogic goes into production. This is u
 - [ ] Put the app behind a **trusted proxy that sets `x-forwarded-for`**, and make sure clients can't supply their own value. Until then, clients can forge their IP address, and only the limit of 20 failures per email reliably stops password guessing.
 - [ ] Use HTTPS.
 - [ ] Run on Node.js 22 or newer.
+- [ ] Run `prisma generate` during the build. The `postinstall` script needs the `prisma` development package, so it fails with `npm install --omit=dev`.
 - [ ] Generate a new `AUTH_SECRET` for production. Don't reuse the development one.
 - [ ] Set `AUTH_TRUST_HOST` only if the host requires it.
+
+## Business rules to finish
+
+- [ ] **Require an admission and a fee plan before a student can move to Enrolled.** Planned for Phase 6. Today any lead can be moved to Enrolled without them.
+
+## Uploaded documents
+
+These include ID proofs and school records, some belonging to minors.
+
+- [ ] Choose where uploads are kept in production. They're on the server's disk in `UPLOAD_DIR`, which needs a persistent, backed-up disk outside the public web folder. Hosts with temporary disks need `src/server/storage.ts` changed to use object storage.
+- [ ] Include uploads in backups, because database backups don't cover them.
+- [ ] Decide whether to scan uploads for viruses. Today only the file type and size are checked.
+- [ ] Decide how long documents are kept. Removing one in the app hides it, but keeps the file.
 
 ## Database
 
 - [ ] Use a managed or properly secured Postgres with a strong, unique password.
 - [ ] Set up automatic backups, and test restoring one.
 - [ ] Apply the schema with `npm run db:deploy`. Never run `npm run seed` in production, because it erases data.
-- [ ] Confirm the delete-blocking triggers exist on `Student`, `Admission`, `Payment`, `FeePlan`, `Instalment` and `Receipt`.
+- [ ] Confirm the delete-blocking triggers exist on `Student`, `AcademicRecord`, `Document`, `Admission`, `Payment`, `FeePlan`, `Instalment` and `Receipt`.
 
 ## Real data
 
@@ -37,7 +51,7 @@ Everything that must be done before ScholarLogic goes into production. This is u
 - [ ] Replace the sample **GSTIN**, legal name, address, phone and email in `OrgSettings`.
 - [ ] Replace the sample **branches** (Koramangala and Indiranagar) with Theta's real centres.
 - [ ] Review the sample pipeline stages, lead sources, target exams and message templates.
-- [ ] **Create the first real admin account.** The seed script is the only way to create users today and it refuses to run in production, so this needs a one-off script until user management arrives in Phase 8.
+- [ ] **Create the first real admin account** with `npm run create-admin`.
 - [ ] Remove the demo accounts and all sample records, which use `@theta.example` and `@example.com` addresses and made-up phone numbers.
 
 ## Before launch

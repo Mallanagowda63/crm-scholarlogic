@@ -167,7 +167,8 @@ test.describe("editing leads", () => {
     await signIn(page, "admin");
     await page.goto(`/leads?q=${phone}`, { waitUntil: "networkidle" });
 
-    await row(page, "Edit Target").getByRole("button", { name: "Edit Target", exact: true }).click();
+    await page.getByRole("button", { name: "Actions for Edit Target" }).click();
+    await page.getByRole("menuitem", { name: "Edit" }).click();
     await expect(page.getByLabel(/Full name/)).toHaveValue("Edit Target");
     await page.getByLabel("City").fill("Hubballi");
     await page.getByRole("button", { name: "Save changes" }).click();
@@ -251,7 +252,7 @@ test.describe("the table", () => {
   test("sorts by name in both directions", async ({ page }) => {
     await signIn(page, "admin");
     await page.goto("/leads", { waitUntil: "networkidle" });
-    const names = () => page.locator("tbody tr td:nth-child(2) button").allTextContents();
+    const names = () => page.locator("tbody tr td:nth-child(2) a:first-child").allTextContents();
 
     await page.getByRole("link", { name: "Name" }).click();
     await expect(page).toHaveURL(/sort=name/);

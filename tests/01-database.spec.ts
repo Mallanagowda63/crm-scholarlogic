@@ -231,7 +231,7 @@ test.describe("database rules", () => {
     await expect(appDb.payment.deleteMany()).rejects.toThrow(/can't be hard-deleted/);
   });
 
-  for (const table of ["Student", "Admission", "Payment", "FeePlan", "Instalment", "Receipt"]) {
+  for (const table of ["Student", "AcademicRecord", "Admission", "Payment", "FeePlan", "Instalment", "Receipt"]) {
     test(`the database blocks raw DELETE on ${table}`, async () => {
       const before = await db.$queryRawUnsafe<{ n: bigint }[]>(`SELECT count(*) n FROM "${table}"`);
       await expect(db.$executeRawUnsafe(`DELETE FROM "${table}"`)).rejects.toThrow(/cannot be deleted/);
@@ -239,6 +239,15 @@ test.describe("database rules", () => {
       expect(after[0].n).toBe(before[0].n);
     });
   }
+
+  test("the database blocks raw DELETE on Document", async () => {
+    // The seed has no documents, because it has no files to attach.
+    const student = await db.student.findFirstOrThrow();
+    const document = await db.document.create({
+      data: { studentId: student.id, type: "Other", fileName: "test.pdf", fileUrl: "test.pdf", deletedAt: new Date() },
+    });
+    await expect(db.$executeRawUnsafe(`DELETE FROM "Document" WHERE id = '${document.id}'`)).rejects.toThrow(/cannot be deleted/);
+  });
 
   test("totals above ₹2.1 crore sum correctly", async () => {
     const plan = await db.feePlan.findFirstOrThrow();

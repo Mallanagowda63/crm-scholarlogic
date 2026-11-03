@@ -15,7 +15,8 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "test": "playwright test",
-    "test:report": "playwright show-report"
+    "test:report": "playwright show-report",
+    "create-admin": "node scripts/create-admin.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

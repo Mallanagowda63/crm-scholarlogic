@@ -1,10 +1,11 @@
 "use client";
 
-import { MessageCircle, MoreHorizontal, Pencil, Phone, Trash2 } from "lucide-react";
+import { MessageCircle, MoreHorizontal, Pencil, Phone, Trash2, UserRound } from "lucide-react";
+import Link from "next/link";
 import { useTransition } from "react";
 import { toast } from "sonner";
 
-import { useLeadWorkspace } from "@/app/(app)/leads/leads-workspace";
+import { useLeadWorkspace } from "@/app/(app)/leads/lead-dialogs";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -62,7 +63,16 @@ export function useStageChanger() {
   return { changeStage, isPending };
 }
 
-export function LeadActionsMenu({ lead }: { lead: LeadRow }) {
+export function LeadActionsMenu({
+  lead,
+  onProfile = false,
+  onDeleted,
+}: {
+  lead: Pick<LeadRow, "id" | "name" | "phone" | "stage">;
+  /** Already on this person's profile, so the link to it is left out. */
+  onProfile?: boolean;
+  onDeleted?: () => void;
+}) {
   const { openEdit, options, canManage } = useLeadWorkspace();
   const { changeStage } = useStageChanger();
   const [, startTransition] = useTransition();
@@ -74,6 +84,7 @@ export function LeadActionsMenu({ lead }: { lead: LeadRow }) {
         toast.error(result.error);
         return;
       }
+      onDeleted?.();
       toast.success(`${lead.name} deleted`, {
         action: {
           label: "Undo",
@@ -97,6 +108,12 @@ export function LeadActionsMenu({ lead }: { lead: LeadRow }) {
         <MoreHorizontal />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52">
+        {!onProfile && (
+          <DropdownMenuItem render={<Link href={`/students/${lead.id}`} />}>
+            <UserRound aria-hidden />
+            Open profile
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem onClick={() => openEdit(lead.id)}>
           <Pencil aria-hidden />
           Edit

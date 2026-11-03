@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/command";
 import { useLogout } from "@/hooks/use-logout";
 import type { ModuleDef } from "@/lib/modules";
-import { searchLeads, type LeadSearchResult } from "@/server/actions/leads";
+import { searchPeople, type PersonSearchResult } from "@/server/actions/leads";
 
 export function CommandPalette({
   modules,
@@ -32,8 +32,9 @@ export function CommandPalette({
   const { setTheme } = useTheme();
   const signOut = useLogout();
   const [query, setQuery] = useState("");
-  const [leads, setLeads] = useState<LeadSearchResult[]>([]);
-  const canSearchLeads = modules.some((definition) => definition.id === "leads");
+  const [people, setPeople] = useState<PersonSearchResult[]>([]);
+  const canSearch = modules.some((definition) => definition.id === "students");
+  const peopleLabel = modules.some((definition) => definition.id === "leads") ? "leads" : "students";
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -47,21 +48,21 @@ export function CommandPalette({
   }, [open, onOpenChange]);
 
   useEffect(() => {
-    if (!canSearchLeads || query.trim().length < 2) {
-      setLeads([]);
+    if (!canSearch || query.trim().length < 2) {
+      setPeople([]);
       return;
     }
     let isCurrent = true;
     const timer = setTimeout(() => {
-      searchLeads(query)
-        .then((results) => isCurrent && setLeads(results))
-        .catch(() => isCurrent && setLeads([]));
+      searchPeople(query)
+        .then((results) => isCurrent && setPeople(results))
+        .catch(() => isCurrent && setPeople([]));
     }, 200);
     return () => {
       isCurrent = false;
       clearTimeout(timer);
     };
-  }, [query, canSearchLeads]);
+  }, [query, canSearch]);
 
   function run(action: () => void) {
     onOpenChange(false);
@@ -74,26 +75,26 @@ export function CommandPalette({
       open={open}
       onOpenChange={onOpenChange}
       title="Command palette"
-      description="Search leads, jump to a page or run a command."
+      description="Search people, jump to a page or run a command."
     >
       <Command>
         <CommandInput
-          placeholder={canSearchLeads ? "Search leads, pages or commands..." : "Jump to a page or run a command..."}
+          placeholder={canSearch ? `Search ${peopleLabel}, pages or commands...` : "Jump to a page or run a command..."}
           value={query}
           onValueChange={setQuery}
         />
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
-          {leads.length > 0 && (
+          {people.length > 0 && (
             <>
-              <CommandGroup heading="Leads">
-                {leads.map(({ id, name, phone, stage }) => (
-                  // The query is a keyword because the server already matched this lead on fields not shown here.
+              <CommandGroup heading="People">
+                {people.map(({ id, name, stage }) => (
+                  // The query is a keyword because the server already matched this person on fields not shown here.
                   <CommandItem
                     key={id}
-                    value={`lead ${id} ${name}`}
+                    value={`person ${id} ${name}`}
                     keywords={[query]}
-                    onSelect={() => run(() => router.push(`/leads?q=${encodeURIComponent(phone)}`))}
+                    onSelect={() => run(() => router.push(`/students/${id}`))}
                   >
                     <User aria-hidden />
                     <span className="min-w-0 flex-1 truncate">{name}</span>

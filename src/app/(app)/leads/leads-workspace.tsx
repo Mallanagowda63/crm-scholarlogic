@@ -3,35 +3,18 @@
 import { Download, KanbanSquare, Loader2, Plus, Search, Table2, Upload, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
 import { ImportDialog } from "@/app/(app)/leads/import-dialog";
-import { LeadSheet } from "@/app/(app)/leads/lead-sheet";
-import { LostReasonDialog } from "@/app/(app)/leads/lost-reason-dialog";
+import { LeadDialogsProvider, useLeadWorkspace } from "@/app/(app)/leads/lead-dialogs";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { useTypedBeforeHydration } from "@/hooks/use-typed-before-hydration";
 import { hasActiveFilters, leadsQuery, type LeadFilters } from "@/lib/leads";
 import { cn } from "@/lib/utils";
 import type { LeadOptions } from "@/server/leads";
-
-type LeadWorkspace = {
-  options: LeadOptions;
-  canManage: boolean;
-  openCreate: () => void;
-  openEdit: (id: string) => void;
-  /** Resolves to the chosen reason, or null if the person cancelled. */
-  askLostReason: (subject: string) => Promise<string | null>;
-};
-
-const LeadWorkspaceContext = createContext<LeadWorkspace | null>(null);
-
-export function useLeadWorkspace() {
-  const workspace = useContext(LeadWorkspaceContext);
-  if (!workspace) throw new Error("useLeadWorkspace must be used inside LeadsWorkspace");
-  return workspace;
-}
 
 export function LeadsWorkspace({
   filters,
@@ -44,24 +27,19 @@ export function LeadsWorkspace({
   canManage: boolean;
   children: React.ReactNode;
 }) {
+  return (
+    <LeadDialogsProvider options={options} canManage={canManage}>
+      <LeadsToolbar filters={filters} />
+      {children}
+    </LeadDialogsProvider>
+  );
+}
+
+function LeadsToolbar({ filters }: { filters: LeadFilters }) {
+  const { options, canManage, openCreate } = useLeadWorkspace();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [sheet, setSheet] = useState<{ open: boolean; leadId: string | null }>({ open: false, leadId: null });
   const [importOpen, setImportOpen] = useState(false);
-  const [lostRequest, setLostRequest] = useState<{ subject: string; resolve: (reason: string | null) => void } | null>(
-    null,
-  );
-
-  const openCreate = useCallback(() => setSheet({ open: true, leadId: null }), []);
-  const openEdit = useCallback((leadId: string) => setSheet({ open: true, leadId }), []);
-  const askLostReason = useCallback(
-    (subject: string) => new Promise<string | null>((resolve) => setLostRequest({ subject, resolve })),
-    [],
-  );
-  const workspace = useMemo(
-    () => ({ options, canManage, openCreate, openEdit, askLostReason }),
-    [options, canManage, openCreate, openEdit, askLostReason],
-  );
 
   // Tracks the newest choice, so a second quick change builds on the first instead of undoing it.
   const latestFilters = useRef(filters);
@@ -81,6 +59,8 @@ export function LeadsWorkspace({
 
   // Waits for a pause in typing, so each keystroke doesn't load a new page.
   const [search, setSearch] = useState(filters.q);
+  const searchInput = useRef<HTMLInputElement>(null);
+  useTypedBeforeHydration(searchInput, search, setSearch);
   useEffect(() => {
     if (search.trim() === filters.q) return;
     const timer = setTimeout(() => navigate({ q: search.trim() }), 300);
@@ -91,7 +71,7 @@ export function LeadsWorkspace({
   const exportQuery = leadsQuery(filters, { view: "table", page: 1 });
 
   return (
-    <LeadWorkspaceContext.Provider value={workspace}>
+    <>
       <PageHeader
         title="Leads"
         description="Everyone from first enquiry until they enrol."
@@ -147,6 +127,7 @@ export function LeadsWorkspace({
         <div className="relative min-w-48 flex-1 sm:max-w-xs">
           <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
           <Input
+            ref={searchInput}
             type="search"
             aria-label="Search leads"
             placeholder="Search name, phone or email"
@@ -217,25 +198,8 @@ export function LeadsWorkspace({
         {isPending && <Loader2 className="size-4 animate-spin text-muted-foreground" aria-label="Updating" />}
       </div>
 
-      {children}
-
-      <LeadSheet
-        key={`${sheet.leadId ?? "new"}-${sheet.open}`}
-        open={sheet.open}
-        leadId={sheet.leadId}
-        options={options}
-        canManage={canManage}
-        onClose={() => setSheet((current) => ({ ...current, open: false }))}
-      />
       <ImportDialog open={importOpen} onOpenChange={setImportOpen} />
-      <LostReasonDialog
-        subject={lostRequest?.subject ?? null}
-        onResult={(reason) => {
-          lostRequest?.resolve(reason);
-          setLostRequest(null);
-        }}
-      />
-    </LeadWorkspaceContext.Provider>
+    </>
   );
 }
 

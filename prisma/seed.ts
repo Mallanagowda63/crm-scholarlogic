@@ -450,6 +450,15 @@ async function main() {
           studentId: student.id,
         },
       });
+      await db.activity.create({
+        data: {
+          studentId: student.id,
+          type: "FOLLOW_UP",
+          body: `Follow-up scheduled: Follow up with ${name}`,
+          actorId: assignedTo.id,
+          occurredAt: stepTime(Math.max(lastStep, 1)),
+        },
+      });
       if (nextFollowUpAt < now && !deleted) {
         await db.notification.create({
           data: {
