@@ -348,7 +348,7 @@ test.describe("the profile", () => {
     const [admission] = student.admissions;
     await expect(page.getByRole("main")).toContainText(admission.course.name);
     await expect(page.getByRole("main")).toContainText("Confirmed");
-    for (const item of admission.checklistItems) await expect(page.getByText(item.name)).toBeVisible();
+    for (const item of admission.checklistItems) await expect(page.getByRole("checkbox", { name: item.name })).toBeVisible();
     const required = admission.checklistItems.filter((item) => item.isRequired);
     await expect(page.getByRole("main")).toContainText(
       `${required.filter((item) => item.completedAt).length} of ${required.length} required`,
@@ -361,7 +361,7 @@ test.describe("the profile", () => {
     const rupees = (paise: number) =>
       new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(paise / 100);
     const payable = Math.round(((plan.totalAmount - plan.discountAmount) * (10000 + plan.gstRateBps)) / 10000);
-    const paid = plan.payments.reduce((sum, payment) => sum + payment.amount, 0);
+    const paid = plan.payments.filter((payment) => !payment.deletedAt).reduce((sum, payment) => sum + payment.amount, 0);
 
     await signIn(page, "admin");
     await page.goto(`/students/${student.id}?tab=payments`, { waitUntil: "networkidle" });

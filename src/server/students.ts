@@ -175,8 +175,8 @@ export function getFeePlans(studentId: string) {
           payments: { where: { deletedAt: null }, select: { id: true, amount: true } },
         },
       },
+      // Cancelled payments are included, so their receipts stay visible on the record.
       payments: {
-        where: { deletedAt: null },
         orderBy: { paidAt: "desc" },
         include: { receipt: { select: { number: true } } },
       },

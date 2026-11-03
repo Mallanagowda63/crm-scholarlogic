@@ -453,6 +453,19 @@ test.describe("the Kanban board", () => {
     await signIn(page, "admin");
     await page.goto("/leads?view=board&q=Flamingo", { waitUntil: "networkidle" });
 
+    // Refused until there's an admission with a batch and fee plan.
+    await page.getByRole("button", { name: "Actions for Enrol Target Flamingo" }).click();
+    await page.getByRole("menuitem", { name: "Enrolled" }).click();
+    await expectToast(page, "Enrol Target Flamingo needs an admission and a fee plan before enrolling.");
+    expect((await lead(phone)).stage.type).toBe("OPEN");
+
+    const course = await db.course.findUniqueOrThrow({ where: { code: "KCET-CR" }, include: { batches: true } });
+    const { id: studentId } = await lead(phone);
+    const plan = await db.feePlan.create({ data: { studentId, courseId: course.id, totalAmount: course.fee, gstRateBps: course.gstRateBps } });
+    await db.admission.create({
+      data: { studentId, courseId: course.id, batchId: course.batches[0].id, admissionDate: new Date(), feePlanId: plan.id },
+    });
+
     await page.getByRole("button", { name: "Actions for Enrol Target Flamingo" }).click();
     await page.getByRole("menuitem", { name: "Enrolled" }).click();
     await expectToast(page, /now counts as a student/);

@@ -1,13 +1,9 @@
 import {
-  CalendarCheck,
   CalendarClock,
-  CheckCircle2,
-  Circle,
   Download,
   FileText,
   GraduationCap,
   History,
-  IndianRupee,
   Mail,
   MessageCircle,
   NotebookPen,
@@ -36,16 +32,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatDateTime, formatRupees, formatShortDate, formatTime } from "@/lib/format";
 import { BOARD_LABELS } from "@/lib/leads";
 import { formatPhone } from "@/lib/phone";
-import { ACTIVITY_PAGE_SIZE, payableAmount } from "@/lib/students";
+import { ACTIVITY_PAGE_SIZE } from "@/lib/students";
 import { cn } from "@/lib/utils";
 import {
   getAcademicRecords,
   getActivities,
-  getAdmissions,
   getDemoClasses,
   getDemoOptions,
   getDocuments,
-  getFeePlans,
   getOpenFollowUps,
   type ActivityRow,
   type Profile,
@@ -438,166 +432,3 @@ export async function DocumentsTab({ studentId, canEdit }: { studentId: string; 
   );
 }
 
-const ADMISSION_STATUS = { PENDING: "Pending", CONFIRMED: "Confirmed", CANCELLED: "Cancelled" } as const;
-const BATCH_MODE = { OFFLINE: "Offline", ONLINE: "Online", HYBRID: "Hybrid" } as const;
-
-export async function AdmissionTab({ studentId }: { studentId: string }) {
-  const admissions = await getAdmissions(studentId);
-  if (admissions.length === 0) {
-    return (
-      <Card>
-        <EmptyState
-          icon={CalendarCheck}
-          title="No admission yet"
-          description="The admission and its documents checklist appear here once this person joins."
-          className="py-8"
-        />
-      </Card>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {admissions.map((admission) => {
-        const required = admission.checklistItems.filter((item) => item.isRequired);
-        const done = required.filter((item) => item.completedAt).length;
-        return (
-          <div key={admission.id} className="grid gap-4 lg:grid-cols-2">
-            <Panel title={admission.course.name}>
-              <Details
-                items={[
-                  ["Status", ADMISSION_STATUS[admission.status]],
-                  ["Admission date", formatShortDate(admission.admissionDate)],
-                  [
-                    "Batch",
-                    admission.batch ? `${admission.batch.name} (${BATCH_MODE[admission.batch.mode]})` : "Not chosen yet",
-                  ],
-                  ["Timing", admission.batch?.timing],
-                  ["Branch", admission.batch?.branch?.name],
-                  ["Fee plan", admission.feePlan ? "Set up. See the Payments tab." : "Not set up yet"],
-                ]}
-              />
-            </Panel>
-            <Panel title={`Documents checklist (${done} of ${required.length} required)`}>
-              <ul className="space-y-2">
-                {admission.checklistItems.map((item) => (
-                  <li key={item.id} className="flex items-center gap-2 text-sm">
-                    {item.completedAt ? (
-                      <CheckCircle2 className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-label="Done" />
-                    ) : (
-                      <Circle className="size-4 shrink-0 text-muted-foreground" aria-label="Not done" />
-                    )}
-                    {item.name}
-                    {!item.isRequired && <span className="text-xs text-muted-foreground">Optional</span>}
-                  </li>
-                ))}
-              </ul>
-            </Panel>
-          </div>
-        );
-      })}
-      <p className="text-sm text-muted-foreground">Managing admissions and ticking off documents arrives in Phase 6.</p>
-    </div>
-  );
-}
-
-const METHOD_LABEL = { UPI: "UPI", CASH: "Cash", CARD: "Card", BANK_TRANSFER: "Bank transfer" } as const;
-
-export async function PaymentsTab({ studentId }: { studentId: string }) {
-  const plans = await getFeePlans(studentId);
-  const now = new Date();
-  if (plans.length === 0) {
-    return (
-      <Card>
-        <EmptyState
-          icon={IndianRupee}
-          title="No fee plan yet"
-          description="Instalments and payments appear here once a fee plan is set up."
-          className="py-8"
-        />
-      </Card>
-    );
-  }
-
-  return (
-    <div className="space-y-5">
-      {plans.map((plan) => {
-        const payable = payableAmount(plan);
-        const paid = plan.payments.reduce((sum, payment) => sum + payment.amount, 0);
-        return (
-          <div key={plan.id} className="space-y-4">
-            <dl className="grid gap-3 sm:grid-cols-3" aria-label={`Fee summary for ${plan.course.name}`}>
-              {(
-                [
-                  ["Total payable", payable, `Includes ${plan.gstRateBps / 100}% GST`],
-                  ["Paid", paid, `${plan.payments.length} ${plan.payments.length === 1 ? "payment" : "payments"}`],
-                  ["Balance", payable - paid, plan.discountAmount > 0 ? `After ${formatRupees(plan.discountAmount)} discount` : plan.course.name],
-                ] as const
-              ).map(([label, amount, note]) => (
-                <div key={label} className="rounded-xl border bg-card p-4 shadow-xs">
-                  <dt className="text-sm text-muted-foreground">{label}</dt>
-                  <dd className="mt-1 text-xl font-semibold tabular-nums">{formatRupees(amount)}</dd>
-                  <p className="mt-0.5 text-xs text-muted-foreground">{note}</p>
-                </div>
-              ))}
-            </dl>
-
-            <div className="grid gap-4 lg:grid-cols-2">
-              <Panel title="Instalments">
-                <ul className="divide-y">
-                  {plan.instalments.map((instalment) => {
-                    const received = instalment.payments.reduce((sum, payment) => sum + payment.amount, 0);
-                    const isPaid = received >= instalment.amount;
-                    const isOverdue = !isPaid && instalment.dueDate < now;
-                    return (
-                      <li key={instalment.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
-                        <div>
-                          <p className="font-medium">Instalment {instalment.sequence}</p>
-                          <p className="text-xs text-muted-foreground">Due {formatShortDate(instalment.dueDate)}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-medium tabular-nums">{formatRupees(instalment.amount)}</p>
-                          <p
-                            className={cn(
-                              "text-xs text-muted-foreground",
-                              isPaid && "text-emerald-700 dark:text-emerald-400",
-                              isOverdue && "font-medium text-destructive",
-                            )}
-                          >
-                            {isPaid ? "Paid" : isOverdue ? "Overdue" : "Upcoming"}
-                          </p>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </Panel>
-
-              <Panel title="Payments received">
-                {plan.payments.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No payments yet.</p>
-                ) : (
-                  <ul className="divide-y">
-                    {plan.payments.map((payment) => (
-                      <li key={payment.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
-                        <div className="min-w-0">
-                          <p className="font-medium">{formatShortDate(payment.paidAt)}</p>
-                          <p className="truncate text-xs text-muted-foreground">
-                            {METHOD_LABEL[payment.method]}
-                            {payment.receipt && ` · ${payment.receipt.number}`}
-                          </p>
-                        </div>
-                        <p className="font-medium tabular-nums">{formatRupees(payment.amount)}</p>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </Panel>
-            </div>
-          </div>
-        );
-      })}
-      <p className="text-sm text-muted-foreground">Recording payments and downloading receipts arrives in Phase 6.</p>
-    </div>
-  );
-}

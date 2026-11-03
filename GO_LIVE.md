@@ -2,7 +2,7 @@
 
 Everything that must be done before ScholarLogic goes into production. This is updated at the end of every phase.
 
-*Last updated: Phase 5.*
+*Last updated: Phase 6.*
 
 ## Security upgrades
 
@@ -24,14 +24,14 @@ Everything that must be done before ScholarLogic goes into production. This is u
 - [ ] Generate a new `AUTH_SECRET` for production. Don't reuse the development one.
 - [ ] Set `AUTH_TRUST_HOST` only if the host requires it.
 
+## Receipts
+
+- [ ] Receipts can't show non-Latin scripts such as Devanagari or Kannada, which appear as empty boxes. Names need to be in English letters, or a font covering those scripts needs adding to `assets/fonts`.
+
 ## Reminders
 
 - [ ] Decide whether reminders should also go out by email, SMS or WhatsApp. Today they only appear in the notification bell, while someone has the app open or the next time they open it.
 - [ ] Before renaming the **Demo Scheduled** or **Demo Attended** stages in Settings, make sure demo classes can still find them. Scheduling a demo and marking attendance move the student to those stages by name.
-
-## Business rules to finish
-
-- [ ] **Require an admission and a fee plan before a student can move to Enrolled.** Planned for Phase 6. Today any lead can be moved to Enrolled without them.
 
 ## Uploaded documents
 
@@ -53,6 +53,9 @@ These include ID proofs and school records, some belonging to minors.
 
 - [ ] Replace the sample **course fees** and instalment plans with Theta's real ones.
 - [ ] Confirm the **GST rate**. The sample data assumes 18% on every course.
+- [ ] Have an accountant review the **receipt format**, including the SAC code (`999293`), wording, and whether a receipt or a tax invoice is required. Receipts assume CGST and SGST, so students from other states need checking for IGST.
+- [ ] Set the **receipt prefix** before the first real payment, as numbers can't be changed after that.
+- [ ] Clear the sample receipts before going live, so real numbering starts at 0001.
 - [ ] Replace the sample **GSTIN**, legal name, address, phone and email in `OrgSettings`.
 - [ ] Replace the sample **branches** (Koramangala and Indiranagar) with Theta's real centres.
 - [ ] Review the sample pipeline stages, lead sources, target exams and message templates.

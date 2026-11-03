@@ -7,8 +7,9 @@ import { db } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
 import { getUserWithAccess, type CurrentUser } from "@/lib/session";
 import { attendanceSchema, demoSchema } from "@/lib/validations/task";
-import { recordAudit, type Tx } from "@/server/audit";
+import { recordAudit } from "@/server/audit";
 import { ownedBy } from "@/server/leads";
+import { advanceToStage } from "@/server/stages";
 
 export type DemoResult = { ok: true } | { ok: false; error: string };
 
@@ -32,34 +33,6 @@ function revalidateDemo(studentId: string) {
 
 function isFuture(date: Date) {
   return date.getTime() > Date.now() - 60_000;
-}
-
-/** Moves someone forward to a demo stage, but never backward from a later one. */
-async function advanceToStage(tx: Tx, user: CurrentUser, studentId: string, stageName: string) {
-  const [student, target] = await Promise.all([
-    tx.student.findUniqueOrThrow({ where: { id: studentId }, include: { stage: true } }),
-    tx.pipelineStage.findUnique({ where: { name: stageName } }),
-  ]);
-  if (!target || student.stage.type !== "OPEN" || student.stage.position >= target.position) return;
-
-  await tx.student.update({ where: { id: studentId }, data: { stageId: target.id } });
-  await tx.activity.create({
-    data: {
-      studentId,
-      type: "STAGE_CHANGE",
-      body: `Stage changed from ${student.stage.name} to ${target.name}`,
-      metadata: { from: student.stage.name, to: target.name },
-      actorId: user.id,
-    },
-  });
-  await recordAudit(tx, {
-    actorId: user.id,
-    action: "lead.stage_changed",
-    entityType: "Student",
-    entityId: studentId,
-    before: { stage: student.stage.name },
-    after: { stage: target.name },
-  });
 }
 
 async function resolveTarget(target: string) {

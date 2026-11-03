@@ -5,15 +5,15 @@ import { Suspense } from "react";
 import { z } from "zod";
 
 import { LeadDialogsProvider } from "@/app/(app)/leads/lead-dialogs";
+import { AdmissionTab } from "@/app/(app)/students/[id]/admission-tab";
+import { PaymentsTab } from "@/app/(app)/students/[id]/payments-tab";
 import { ProfileHeader } from "@/app/(app)/students/[id]/profile-header";
 import {
   AcademicsTab,
   ActivityTab,
-  AdmissionTab,
   DocumentsTab,
   NotesTab,
   OverviewTab,
-  PaymentsTab,
 } from "@/app/(app)/students/[id]/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { requireModuleAccess } from "@/lib/session";
@@ -51,6 +51,7 @@ export default async function StudentProfilePage({ params, searchParams }: Props
   const tab = tabs.find((option) => option.id === query.tab)?.id ?? "overview";
   const canEdit = user.role !== "ACCOUNTS";
   const canManage = user.role === "ADMIN";
+  const canManageFees = user.role === "ADMIN" || user.role === "ACCOUNTS";
 
   const content = (
     <>
@@ -88,8 +89,8 @@ export default async function StudentProfilePage({ params, searchParams }: Props
         {tab === "activity" && <ActivityTab studentId={id} page={query.page} type={query.type} />}
         {tab === "academics" && <AcademicsTab profile={profile} canEdit={canEdit} />}
         {tab === "documents" && <DocumentsTab studentId={id} canEdit={canEdit} />}
-        {tab === "admission" && <AdmissionTab studentId={id} />}
-        {tab === "payments" && <PaymentsTab studentId={id} />}
+        {tab === "admission" && <AdmissionTab profile={profile} canEdit={canEdit} />}
+        {tab === "payments" && <PaymentsTab studentId={id} canManage={canManageFees} />}
         {tab === "notes" && <NotesTab studentId={id} page={query.page} canEdit={canEdit} />}
       </Suspense>
     </>
