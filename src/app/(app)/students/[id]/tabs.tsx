@@ -27,6 +27,7 @@ import {
   RemoveDocumentButton,
 } from "@/app/(app)/students/[id]/profile-forms";
 import { ActivityTypeFilter } from "@/app/(app)/students/[id]/activity-filter";
+import { DemoActions, ScheduleDemoButton } from "@/app/(app)/students/[id]/demo-forms";
 import { Pager } from "@/app/(app)/students/pager";
 import { EmptyState } from "@/components/shared/empty-state";
 import { buttonVariants } from "@/components/ui/button";
@@ -42,6 +43,7 @@ import {
   getActivities,
   getAdmissions,
   getDemoClasses,
+  getDemoOptions,
   getDocuments,
   getFeePlans,
   getOpenFollowUps,
@@ -135,6 +137,7 @@ export async function OverviewTab({ profile, canEdit }: { profile: Profile; canE
         getActivities(profile.id, { take: 5 }),
       ])
     : [[], [], null];
+  const demoOptions = canEdit ? await getDemoOptions() : null;
   const now = new Date();
 
   return (
@@ -193,11 +196,11 @@ export async function OverviewTab({ profile, canEdit }: { profile: Profile; canE
             )}
           </Panel>
 
-          <Panel title="Demo classes">
+          <Panel title="Demo classes" action={demoOptions && <ScheduleDemoButton studentId={profile.id} options={demoOptions} />}>
             {demos.length === 0 ? (
               <p className="text-sm text-muted-foreground">No demo classes yet.</p>
             ) : (
-              <ul className="space-y-3">
+              <ul className="space-y-4">
                 {demos.map((demo) => (
                   <li key={demo.id} className="text-sm">
                     <p className="font-medium">
@@ -209,6 +212,13 @@ export async function OverviewTab({ profile, canEdit }: { profile: Profile; canE
                       {demo.counsellor.name}
                     </p>
                     {demo.feedback && <p className="mt-0.5 text-muted-foreground">{demo.feedback}</p>}
+                    {demo.attended === null && (
+                      <DemoActions
+                        demoId={demo.id}
+                        scheduledAt={demo.scheduledAt}
+                        hasHappened={demo.scheduledAt <= now}
+                      />
+                    )}
                   </li>
                 ))}
               </ul>

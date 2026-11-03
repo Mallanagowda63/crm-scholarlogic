@@ -141,6 +141,9 @@ export const MODULES: readonly ModuleDef[] = [
   },
 ];
 
+/** The latest finished build phase, so pages only promise what's still to come. */
+export const CURRENT_PHASE = 5;
+
 export function getModule(id: string) {
   return MODULES.find((module) => module.id === id);
 }

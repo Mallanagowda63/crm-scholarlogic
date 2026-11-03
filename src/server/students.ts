@@ -112,7 +112,7 @@ export function getOpenFollowUps(studentId: string) {
 
 export function getDemoClasses(studentId: string) {
   return db.demoClass.findMany({
-    where: { studentId },
+    where: { studentId, cancelledAt: null },
     orderBy: { scheduledAt: "desc" },
     include: {
       course: { select: { name: true } },
@@ -121,6 +121,20 @@ export function getDemoClasses(studentId: string) {
     },
   });
 }
+
+export async function getDemoOptions() {
+  const [courses, batches] = await Promise.all([
+    db.course.findMany({ where: { isActive: true }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    db.batch.findMany({
+      where: { isActive: true },
+      orderBy: [{ course: { name: "asc" } }, { name: "asc" }],
+      select: { id: true, name: true, timing: true, course: { select: { name: true } } },
+    }),
+  ]);
+  return { courses, batches };
+}
+
+export type DemoOptions = Awaited<ReturnType<typeof getDemoOptions>>;
 
 export function getAcademicRecords(studentId: string) {
   return db.academicRecord.findMany({ where: { studentId }, orderBy: [{ year: "desc" }, { id: "asc" }] });

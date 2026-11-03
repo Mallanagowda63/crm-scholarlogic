@@ -445,6 +445,8 @@ async function main() {
           priority: pick(["LOW", "MEDIUM", "MEDIUM", "HIGH"] as const),
           dueAt: nextFollowUpAt,
           reminderAt: subHours(nextFollowUpAt, 1),
+          // Reminders already past are covered by the overdue notification below.
+          reminderSentAt: subHours(nextFollowUpAt, 1) < now ? now : null,
           assigneeId: assignedTo.id,
           createdById: assignedTo.id,
           studentId: student.id,

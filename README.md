@@ -2,7 +2,7 @@
 
 A CRM for Theta, a coaching centre. It manages the student journey: enquiry → contacted → demo class → admission → fee payment → enrolled.
 
-**Status:** Phases 1 to 4 of 8 are complete. This covers the design system, app layout, sign-in, roles, database schema, sample data, the Leads module and the student profile. Modules from later phases show a page saying which phase delivers them.
+**Status:** Phases 1 to 5 of 8 are complete. This covers the design system, app layout, sign-in, roles, database schema, sample data, the Leads module, the student profile, tasks, the calendar, demo classes and notifications. Modules from later phases show a page saying which phase delivers them.
 
 See [GO_LIVE.md](GO_LIVE.md) for everything that must be done before production.
 
@@ -62,6 +62,10 @@ The seed script refuses to run in production or against a database that isn't on
 
 `npm run create-admin` asks for a name, email and password at a prompt. The password is hidden as you type, and is never accepted as a command-line argument, so it stays out of shell history. It refuses to change an existing account.
 
+## Reminders
+
+A task's reminder becomes a notification the next time its assignee's browser checks, which happens when the app opens and every minute after that. There's no background job, so nothing is sent while nobody has the app open.
+
 ## Uploaded documents
 
 Files go in `UPLOAD_DIR`, or `uploads/` by default, which isn't served publicly. Downloads go through a route that checks permissions. PDF, JPG, PNG and WebP files up to 5 MB are accepted, judged by their contents rather than their names.
@@ -84,6 +88,7 @@ src/app/(auth)/         Sign-in page
 src/app/(app)/          Signed-in pages, wrapped in the app layout
 src/app/(app)/leads/    Leads table, board, forms, import and export
 src/app/(app)/students/ Students list and the student profile
+src/app/(app)/tasks/    Task list and calendar
 scripts/                Command-line tools
 src/components/layout/  Sidebar, top bar, command palette, menus
 src/components/shared/  Reusable pieces such as empty states and avatars

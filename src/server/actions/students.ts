@@ -11,6 +11,7 @@ import { recordAudit } from "@/server/audit";
 import { ownedBy } from "@/server/leads";
 import { detectFileType, saveUpload } from "@/server/storage";
 import { syncNextFollowUp } from "@/server/students";
+import { reminderTime } from "@/lib/tasks";
 
 export type ProfileResult = { ok: true } | { ok: false; error: string };
 
@@ -110,6 +111,7 @@ export async function scheduleFollowUp(studentId: unknown, input: unknown): Prom
           type: "FOLLOW_UP",
           priority: parsed.data.priority,
           dueAt: new Date(parsed.data.dueAt),
+          reminderAt: reminderTime(new Date(parsed.data.dueAt), Number(parsed.data.reminderMinutes)),
           assigneeId: student.assignedToId ?? user.id,
           createdById: user.id,
           studentId: student.id,

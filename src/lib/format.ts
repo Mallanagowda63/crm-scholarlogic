@@ -57,6 +57,32 @@ export function indiaDayRange(date: Date) {
   return { start: new Date(start), end: new Date(start + dayMs) };
 }
 
+const IST_OFFSET_MS = 330 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** The India calendar date of an instant, as YYYY-MM-DD. */
+export function indiaDateKey(date: Date) {
+  return new Date(date.getTime() + IST_OFFSET_MS).toISOString().slice(0, 10);
+}
+
+/** The instant a YYYY-MM-DD date begins in India. */
+export function dateKeyStart(key: string) {
+  return new Date(Date.parse(`${key}T00:00:00Z`) - IST_OFFSET_MS);
+}
+
+export function addDaysToKey(key: string, days: number) {
+  return new Date(Date.parse(`${key}T00:00:00Z`) + days * DAY_MS).toISOString().slice(0, 10);
+}
+
+/** 0 is Monday and 6 is Sunday. */
+export function weekdayOfKey(key: string) {
+  return (new Date(`${key}T00:00:00Z`).getUTCDay() + 6) % 7;
+}
+
+export function formatKey(key: string, options: Intl.DateTimeFormatOptions) {
+  return new Intl.DateTimeFormat("en-IN", { timeZone: "UTC", ...options }).format(new Date(`${key}T00:00:00Z`));
+}
+
 export function greeting(date: Date) {
   const hour = Number(
     new Intl.DateTimeFormat("en-IN", {
