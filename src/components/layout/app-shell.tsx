@@ -18,10 +18,14 @@ import { cn } from "@/lib/utils";
 
 export function AppShell({
   user,
+  orgName,
+  logoUrl,
   defaultCollapsed,
   children,
 }: {
   user: ShellUser;
+  orgName: string;
+  logoUrl: string | null;
   defaultCollapsed: boolean;
   children: React.ReactNode;
 }) {
@@ -59,7 +63,7 @@ export function AppShell({
             aria-label="ScholarLogic home"
             className="rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
           >
-            {collapsed ? <LogoMark /> : <Logo />}
+            {collapsed ? <LogoMark logoUrl={logoUrl} /> : <Logo orgName={orgName} logoUrl={logoUrl} />}
           </Link>
         </div>
         <SidebarNav modules={modules} collapsed={collapsed} />
@@ -83,7 +87,7 @@ export function AppShell({
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="w-72 gap-0 bg-sidebar p-0">
           <SheetTitle className="flex h-14 items-center border-b px-5 font-normal">
-            <Logo />
+            <Logo orgName={orgName} logoUrl={logoUrl} />
           </SheetTitle>
           <SidebarNav modules={modules} onNavigate={closeMobile} />
         </SheetContent>

@@ -33,8 +33,6 @@ export type ModuleDef = {
   icon: LucideIcon;
   description: string;
   section: string;
-  /** The build phase that delivers this module. */
-  phase: number;
   roles: readonly Role[];
 };
 
@@ -46,7 +44,6 @@ export const MODULES: readonly ModuleDef[] = [
     icon: LayoutDashboard,
     description: "Key numbers, charts and today's follow-ups.",
     section: "Overview",
-    phase: 7,
     roles: ["ADMIN", "COUNSELLOR", "ACCOUNTS", "VIEWER"],
   },
   {
@@ -56,7 +53,6 @@ export const MODULES: readonly ModuleDef[] = [
     icon: BarChart3,
     description: "Conversion, counsellor performance and revenue by course.",
     section: "Overview",
-    phase: 7,
     roles: ["ADMIN", "VIEWER"],
   },
   {
@@ -66,7 +62,6 @@ export const MODULES: readonly ModuleDef[] = [
     icon: Users,
     description: "Capture enquiries and move them through the pipeline.",
     section: "Student journey",
-    phase: 3,
     roles: ["ADMIN", "COUNSELLOR"],
   },
   {
@@ -76,7 +71,6 @@ export const MODULES: readonly ModuleDef[] = [
     icon: GraduationCap,
     description: "A complete view of every student and their history.",
     section: "Student journey",
-    phase: 4,
     roles: ["ADMIN", "COUNSELLOR", "ACCOUNTS"],
   },
   {
@@ -86,7 +80,6 @@ export const MODULES: readonly ModuleDef[] = [
     icon: FileText,
     description: "Admissions, documents checklists and batch placement.",
     section: "Student journey",
-    phase: 6,
     roles: ["ADMIN", "COUNSELLOR"],
   },
   {
@@ -96,7 +89,6 @@ export const MODULES: readonly ModuleDef[] = [
     icon: BookOpen,
     description: "Courses, fees, batches and seat availability.",
     section: "Student journey",
-    phase: 6,
     roles: ["ADMIN", "COUNSELLOR"],
   },
   {
@@ -106,7 +98,6 @@ export const MODULES: readonly ModuleDef[] = [
     icon: CheckSquare,
     description: "Follow-ups, reminders and a shared calendar.",
     section: "Operations",
-    phase: 5,
     roles: ["ADMIN", "COUNSELLOR"],
   },
   {
@@ -116,7 +107,6 @@ export const MODULES: readonly ModuleDef[] = [
     icon: MessageSquare,
     description: "Message templates and logged calls, emails and WhatsApp.",
     section: "Operations",
-    phase: 8,
     roles: ["ADMIN", "COUNSELLOR"],
   },
   {
@@ -126,7 +116,6 @@ export const MODULES: readonly ModuleDef[] = [
     icon: IndianRupee,
     description: "Fee plans, instalments, payments and GST receipts.",
     section: "Operations",
-    phase: 6,
     roles: ["ADMIN", "ACCOUNTS"],
   },
   {
@@ -136,7 +125,6 @@ export const MODULES: readonly ModuleDef[] = [
     icon: Settings,
     description: "Users, roles, pipeline stages, lead sources, target exams and branding.",
     section: "Admin",
-    phase: 8,
     roles: ["ADMIN"],
   },
 ];

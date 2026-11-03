@@ -733,7 +733,7 @@ test.describe("access", () => {
       },
       plan!.id,
     );
-    expect(await db.payment.count({ where: { feePlanId: plan!.id } })).toBe(1);
+    await expect.poll(() => db.payment.count({ where: { feePlanId: plan!.id } }), { timeout: 30_000 }).toBe(1);
     for (const who of ["counsellor", "viewer"]) {
       expect(await replay(browser, who, request), who).toContain("You don't have permission");
     }

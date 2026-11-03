@@ -16,6 +16,7 @@ import {
   OverviewTab,
 } from "@/app/(app)/students/[id]/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { db } from "@/lib/db";
 import { requireModuleAccess } from "@/lib/session";
 import { tabsForRole } from "@/lib/students";
 import { cn } from "@/lib/utils";
@@ -52,10 +53,17 @@ export default async function StudentProfilePage({ params, searchParams }: Props
   const canEdit = user.role !== "ACCOUNTS";
   const canManage = user.role === "ADMIN";
   const canManageFees = user.role === "ADMIN" || user.role === "ACCOUNTS";
+  const templates = canEdit
+    ? await db.messageTemplate.findMany({
+        where: { isActive: true },
+        orderBy: { name: "asc" },
+        select: { id: true, name: true, channel: true },
+      })
+    : [];
 
   const content = (
     <>
-      <ProfileHeader profile={profile} canEdit={canEdit} canManage={canManage} />
+      <ProfileHeader profile={profile} canEdit={canEdit} canManage={canManage} templates={templates} />
 
       <nav aria-label="Profile sections" className="mb-5 flex gap-1 overflow-x-auto border-b">
         {tabs.map((option) => (

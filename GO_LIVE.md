@@ -2,7 +2,7 @@
 
 Everything that must be done before ScholarLogic goes into production. This is updated at the end of every phase.
 
-*Last updated: Phase 7.*
+*Last updated: Phase 8, the final build phase.*
 
 ## Security upgrades
 
@@ -22,6 +22,7 @@ Everything that must be done before ScholarLogic goes into production. This is u
 - [ ] Run on Node.js 22 or newer.
 - [ ] Run `prisma generate` during the build. The `postinstall` script needs the `prisma` development package, so it fails with `npm install --omit=dev`.
 - [ ] Generate a new `AUTH_SECRET` for production. Don't reuse the development one.
+- [ ] Add a way for people to reset a forgotten password themselves, or agree that admins do it from Settings, as there's no email service connected.
 - [ ] Set `AUTH_TRUST_HOST` only if the host requires it.
 
 ## Performance
@@ -34,8 +35,8 @@ Everything that must be done before ScholarLogic goes into production. This is u
 
 ## Reminders
 
+- [ ] Decide whether messages should send automatically. Today WhatsApp and email open on the person's own device with the message ready to review, because no paid WhatsApp or email service is connected.
 - [ ] Decide whether reminders should also go out by email, SMS or WhatsApp. Today they only appear in the notification bell, while someone has the app open or the next time they open it.
-- [ ] Before renaming the **Demo Scheduled** or **Demo Attended** stages in Settings, make sure demo classes can still find them. Scheduling a demo and marking attendance move the student to those stages by name.
 
 ## Uploaded documents
 
@@ -60,13 +61,16 @@ These include ID proofs and school records, some belonging to minors.
 - [ ] Have an accountant review the **receipt format**, including the SAC code (`999293`), wording, and whether a receipt or a tax invoice is required. Receipts assume CGST and SGST, so students from other states need checking for IGST.
 - [ ] Set the **receipt prefix** before the first real payment, as numbers can't be changed after that.
 - [ ] Clear the sample receipts before going live, so real numbering starts at 0001.
-- [ ] Replace the sample **GSTIN**, legal name, address, phone and email in `OrgSettings`.
+- [ ] Replace the sample **GSTIN**, legal name, address, phone and email in Settings, under Organisation & branding.
 - [ ] Replace the sample **branches** (Koramangala and Indiranagar) with Theta's real centres.
 - [ ] Review the sample pipeline stages, lead sources, target exams and message templates.
 - [ ] **Create the first real admin account** with `npm run create-admin`.
+- [ ] Upload Theta's **logo** and set its brand colours in Settings.
 - [ ] Remove the demo accounts and all sample records, which use `@theta.example` and `@example.com` addresses and made-up phone numbers.
 
 ## Before launch
+
+- [ ] Try `npm run create-admin` in a real terminal. Its hidden password prompt has only been tested with simulated input.
 
 - [ ] Run `npm test` against the release build, and make sure everything passes.
 - [ ] Confirm there's a lawful basis and a retention policy for students' and parents' personal data, including minors, under India's data protection law. Student records are never hard-deleted by design, so decide how to handle erasure requests.

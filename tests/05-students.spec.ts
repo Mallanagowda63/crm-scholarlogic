@@ -560,7 +560,7 @@ test.describe("access", () => {
 
     const tabs = await page.getByLabel("Profile sections").getByRole("link").allTextContents();
     expect(tabs).toEqual(["Overview", "Admission", "Payments"]);
-    for (const button of ["Add note", "Log contact", "Schedule follow-up"]) {
+    for (const button of ["Message", "Add note", "Log contact", "Schedule follow-up"]) {
       await expect(page.getByRole("button", { name: button })).toHaveCount(0);
     }
     await expect(page.getByRole("button", { name: /^Actions for/ })).toHaveCount(0);

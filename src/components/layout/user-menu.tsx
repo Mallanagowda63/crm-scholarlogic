@@ -1,7 +1,10 @@
 "use client";
 
-import { LogOut, Settings } from "lucide-react";
+import { KeyRound, LogOut, Settings } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
+
+import { ChangePasswordDialog } from "@/components/layout/change-password-dialog";
 
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { Badge } from "@/components/ui/badge";
@@ -21,8 +24,10 @@ export type ShellUser = { name: string; email: string; role: Role };
 
 export function UserMenu({ user }: { user: ShellUser }) {
   const signOut = useLogout();
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   return (
+    <>
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label={`Account menu for ${user.name}`}
@@ -50,11 +55,17 @@ export function UserMenu({ user }: { user: ShellUser }) {
             Settings
           </DropdownMenuItem>
         )}
+        <DropdownMenuItem onClick={() => setIsChangingPassword(true)}>
+          <KeyRound aria-hidden />
+          Change password
+        </DropdownMenuItem>
         <DropdownMenuItem variant="destructive" onClick={() => void signOut()}>
           <LogOut aria-hidden />
           Sign out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    <ChangePasswordDialog open={isChangingPassword} onClose={() => setIsChangingPassword(false)} />
+    </>
   );
 }

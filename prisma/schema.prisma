@@ -109,6 +109,8 @@ model User {
   passwordHash   String
   role           Role      @default(VIEWER)
   isActive       Boolean   @default(true)
+  /// Raised when a password changes, which ends that person's existing sessions.
+  sessionVersion Int       @default(0)
   /// The counsellor assigned longest ago gets the next new lead.
   lastAssignedAt DateTime?
   createdAt      DateTime  @default(now())
@@ -211,6 +213,8 @@ model PipelineStage {
   color    String
   position Int
   type     StageType @default(OPEN)
+  /// Set on stages the app moves people into itself, so they can be renamed safely.
+  key      String?   @unique
 
   students Student[]
 

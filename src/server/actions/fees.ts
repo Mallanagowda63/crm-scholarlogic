@@ -9,6 +9,7 @@ import { addDaysToKey, dateKeyStart, formatRupees, indiaDateKey } from "@/lib/fo
 import { getUserWithAccess } from "@/lib/session";
 import { feePlanSchema, paymentSchema } from "@/lib/validations/fees";
 import { recordAudit } from "@/server/audit";
+import { LOCKED_TRANSACTION } from "@/server/stages";
 
 export type FeeResult = { ok: true; paymentId?: string } | { ok: false; error: string };
 
@@ -206,7 +207,7 @@ export async function recordPayment(feePlanId: unknown, input: unknown): Promise
       });
       revalidateFees(plan.studentId);
       return payment.id;
-    });
+    }, LOCKED_TRANSACTION);
     return { ok: true, paymentId };
   } catch (error) {
     if (error instanceof PaymentRefused) return { ok: false, error: error.message };

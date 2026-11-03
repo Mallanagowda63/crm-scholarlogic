@@ -6,6 +6,8 @@ import { Logo } from "@/components/shared/logo";
 import { DEMO_PASSWORD, DEMO_USERS } from "@/lib/demo-users";
 import { ROLE_LABELS } from "@/lib/roles";
 import { getCurrentUser } from "@/lib/session";
+import { BrandStyle } from "@/components/shared/brand-style";
+import { getBranding } from "@/server/branding";
 
 export const metadata: Metadata = { title: "Sign in" };
 
@@ -30,6 +32,7 @@ export default async function LoginPage({
   const callbackUrl = safeCallbackUrl((await searchParams).callbackUrl);
   if (await getCurrentUser()) redirect(callbackUrl);
 
+  const branding = await getBranding();
   const demoAccounts =
     process.env.NODE_ENV === "production"
       ? undefined
@@ -40,7 +43,8 @@ export default async function LoginPage({
 
   return (
     <div className="grid min-h-dvh lg:grid-cols-2">
-      <section className="relative hidden flex-col justify-between overflow-hidden bg-linear-to-br from-indigo-700 via-indigo-600 to-violet-600 p-12 text-white lg:flex">
+      <BrandStyle primary={branding.primaryColor} accent={branding.accentColor} />
+      <section className="relative hidden flex-col justify-between overflow-hidden bg-linear-to-br from-primary to-(--brand-accent) p-12 text-white lg:flex">
         <div
           aria-hidden
           className="absolute -top-32 -right-32 size-96 rounded-full bg-white/10 blur-3xl"
@@ -62,12 +66,12 @@ export default async function LoginPage({
             ))}
           </ol>
         </div>
-        <p className="relative text-sm text-indigo-100">Built for Theta</p>
+        <p className="relative text-sm text-white/80">Built for {branding.name}</p>
       </section>
 
       <main className="flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
-          <Logo className="mb-8" />
+          <Logo className="mb-8" orgName={branding.name} logoUrl={branding.logoUrl} />
           <h2 className="text-2xl font-semibold tracking-tight">Welcome back</h2>
           <p className="mt-1 mb-6 text-sm text-muted-foreground">
             Sign in to your ScholarLogic account.

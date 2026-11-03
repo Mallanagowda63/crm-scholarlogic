@@ -83,7 +83,7 @@ export async function scheduleDemo(studentId: unknown, input: unknown): Promise<
           actorId: user.id,
         },
       });
-      await advanceToStage(tx, user, student.id, "Demo Scheduled");
+      await advanceToStage(tx, user, student.id, "DEMO_SCHEDULED");
       await recordAudit(tx, {
         actorId: user.id,
         action: "demo.scheduled",
@@ -204,7 +204,7 @@ export async function recordAttendance(id: unknown, input: unknown): Promise<Dem
           actorId: user.id,
         },
       });
-      if (attended) await advanceToStage(tx, user, demo.studentId, "Demo Attended");
+      if (attended) await advanceToStage(tx, user, demo.studentId, "DEMO_ATTENDED");
       await recordAudit(tx, {
         actorId: user.id,
         action: "demo.attendance_recorded",
