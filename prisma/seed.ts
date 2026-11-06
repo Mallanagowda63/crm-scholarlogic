@@ -147,8 +147,13 @@ function assertSafeToReset() {
     throw new Error("Refusing to seed in production.");
   }
   const url = new URL(process.env.DATABASE_URL ?? "");
-  if (!["localhost", "127.0.0.1"].includes(url.hostname)) {
-    throw new Error(`Refusing to reset a database on ${url.hostname}. Seeding is for local use only.`);
+  // A hosted test copy can be filled on purpose, by naming its host.
+  const allowedRemote = process.env.ALLOW_SEED_ON_HOST === url.hostname;
+  if (!["localhost", "127.0.0.1"].includes(url.hostname) && !allowedRemote) {
+    throw new Error(
+      `Refusing to reset a database on ${url.hostname}. Seeding is for local use only. ` +
+        `To fill a hosted test copy, set ALLOW_SEED_ON_HOST=${url.hostname}.`,
+    );
   }
 }
 
