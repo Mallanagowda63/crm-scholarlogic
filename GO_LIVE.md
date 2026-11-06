@@ -68,6 +68,7 @@ These include ID proofs and school records, some belonging to minors.
 - [ ] Decide whether the LMS or the CRM is the main record for a student once they're verified, so details aren't kept up to date in two places.
 - [ ] **Create the first real admin account** with `npm run create-admin`.
 - [ ] Upload Theta's **logo** and set its brand colours in Settings.
+- [ ] Make sure `SHOW_DEMO_ACCOUNTS` isn't set to `true` on the server, as it puts the demo password on the sign-in page.
 - [ ] Remove the demo accounts and all sample records, which use `@theta.example` and `@example.com` addresses and made-up phone numbers.
 
 ## Before launch
