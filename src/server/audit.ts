@@ -18,14 +18,17 @@ export function recordAudit(
   return tx.auditLog.create({ data: entry });
 }
 
+// Dates are new objects on every read, so they're compared and logged by their value.
+const comparable = (value: unknown) => (value instanceof Date ? value.toISOString() : (value ?? null));
+
 /** Lists only the fields that changed, so the log stays readable. */
 export function changedFields<T extends Record<string, unknown>>(before: T, after: Partial<T>) {
   const previous: Record<string, Prisma.InputJsonValue | null> = {};
   const next: Record<string, Prisma.InputJsonValue | null> = {};
   for (const key of Object.keys(after)) {
-    if (before[key] !== after[key]) {
-      previous[key] = (before[key] ?? null) as Prisma.InputJsonValue | null;
-      next[key] = (after[key] ?? null) as Prisma.InputJsonValue | null;
+    if (comparable(before[key]) !== comparable(after[key])) {
+      previous[key] = comparable(before[key]) as Prisma.InputJsonValue | null;
+      next[key] = comparable(after[key]) as Prisma.InputJsonValue | null;
     }
   }
   return { before: previous, after: next, hasChanges: Object.keys(next).length > 0 };

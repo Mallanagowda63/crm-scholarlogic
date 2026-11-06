@@ -20,6 +20,7 @@ export function searchWhere(q: string): Prisma.StudentWhereInput {
       { name: text },
       { email: text },
       { parentName: text },
+      { college: text },
       ...(digits.length >= 3
         ? [
             { phone: { contains: digits } },
@@ -75,7 +76,8 @@ const LEAD_SELECT = {
   phone: true,
   email: true,
   city: true,
-  currentClass: true,
+  degree: true,
+  degreeStream: true,
   budget: true,
   lostReason: true,
   nextFollowUpAt: true,
@@ -84,7 +86,6 @@ const LEAD_SELECT = {
   stage: { select: { id: true, name: true, color: true, type: true } },
   source: { select: { name: true } },
   courseInterest: { select: { name: true } },
-  targetExam: { select: { name: true } },
   assignedTo: { select: { id: true, name: true } },
 } satisfies Prisma.StudentSelect;
 
@@ -147,7 +148,7 @@ export async function getBoard(user: CurrentUser, filters: LeadFilters, now: Dat
 }
 
 export async function getLeadOptions() {
-  const [stages, sources, courses, targetExams, assignees] = await Promise.all([
+  const [stages, sources, courses, assignees] = await Promise.all([
     db.pipelineStage.findMany({
       orderBy: { position: "asc" },
       select: { id: true, name: true, color: true, type: true },
@@ -162,18 +163,13 @@ export async function getLeadOptions() {
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),
-    db.targetExam.findMany({
-      where: { isActive: true },
-      orderBy: { position: "asc" },
-      select: { id: true, name: true },
-    }),
     db.user.findMany({
       where: { isActive: true, role: "COUNSELLOR" },
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),
   ]);
-  return { stages, sources, courses, targetExams, assignees };
+  return { stages, sources, courses, assignees };
 }
 
 export type LeadOptions = Awaited<ReturnType<typeof getLeadOptions>>;

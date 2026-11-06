@@ -14,8 +14,8 @@ import { commitLeadImport, previewLeadImport, type ImportPreview } from "@/serve
 type ReadyPreview = Extract<ImportPreview, { ok: true }>;
 
 const TEMPLATE =
-  "Name,Phone,Alternate Phone,Email,Parent Name,Parent Phone,City,Class,Board,School,Target Exam,Course,Source,Budget,Preferred Intake,Notes\n" +
-  "Sample Student,9000000000,,sample@example.com,Sample Parent,9000000001,Bengaluru,11th,CBSE,Sample School,JEE,JEE-2Y,Website,150000,June 2027,Prefers evening batches\n";
+  "Name,Phone,Alternate Phone,Email,Parent Name,Parent Phone,City,Address,Date of Birth,College,Degree,Stream,Degree Score,Pass-out Year,10th %,12th %,Course,Mode,Joining Date,Source,Budget,Preferred Intake,Notes\n" +
+  "Sample Student,9000000000,,sample@example.com,Sample Parent,9000000001,Bengaluru,\"12 MG Road, Bengaluru\",2003-05-14,Sample College,B.E,CSE,7.8,2025,88,82,DA,Offline,2026-12-01,Website,45000,December 2026,Prefers weekend batches\n";
 
 export function ImportDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const [text, setText] = useState<string | null>(null);

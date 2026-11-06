@@ -1,6 +1,6 @@
 # ScholarLogic
 
-A CRM for Theta, a coaching centre. It manages the student journey: enquiry → contacted → demo class → admission → fee payment → enrolled.
+A CRM for Theta, an IT training institute for graduates. Lead details match the registration form on the ScholarLogic LMS. It manages the student journey: enquiry → contacted → demo class → admission → fee payment → enrolled.
 
 **Status:** All 8 build phases are complete. See [GO_LIVE.md](GO_LIVE.md) for what must be done before production.
 
@@ -23,6 +23,8 @@ npm run dev
 ```
 
 Open http://localhost:3000.
+
+`npm run dev` recompiles as you edit, so pages take a second or two. To use the app at full speed, run `npm run build` and then `npm start`. Run the build again after using `npm run dev`, because both use the `.next` folder.
 
 ## Demo accounts
 
@@ -147,3 +149,5 @@ Set `x-forwarded-for` from a trusted proxy in production, because clients can fo
 - **Dates:** stored in UTC and shown in India time.
 - **Deleting:** `Student`, `AcademicRecord`, `Document`, `Admission` and `Payment` are soft-deleted by setting `deletedAt`. A database trigger blocks `DELETE` on these and on `FeePlan`, `Instalment` and `Receipt`. Cancel a plan or instalment with `cancelledAt`.
 - **Reading soft-deleted data:** top-level queries hide deleted rows automatically. An `include` of those models must add `where: { deletedAt: null }` itself.
+
+To put a test copy on a server, see [DEPLOY.md](DEPLOY.md).

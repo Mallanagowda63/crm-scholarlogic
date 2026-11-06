@@ -1,4 +1,4 @@
-import { PrismaClient, type Board, type PaymentMethod } from "@prisma/client";
+import { PrismaClient, type BatchMode, type PaymentMethod } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { addDays, addHours, subDays, subHours } from "date-fns";
 
@@ -39,36 +39,49 @@ const LOCALITIES = [
   "Koramangala", "Indiranagar", "HSR Layout", "Jayanagar", "Whitefield", "Malleshwaram",
   "Rajajinagar", "Electronic City", "Marathahalli", "BTM Layout",
 ];
-const SCHOOLS = [
-  "Delhi Public School", "Kendriya Vidyalaya", "St. Joseph's High School", "National Public School",
-  "Sri Chaitanya School", "Vidya Mandir", "Army Public School", "Bishop Cotton School",
+const COLLEGES = [
+  "RV College of Engineering, VTU", "BMS College of Engineering, VTU", "PES University",
+  "Dayananda Sagar College of Engineering, VTU", "MS Ramaiah Institute of Technology, VTU", "Christ University",
+  "Jain University", "Acharya Institute of Technology, VTU", "St. Joseph's College, Bengaluru City University",
+  "Mount Carmel College, Bengaluru City University",
 ];
+const DEGREES = [
+  { degree: "B.E", streams: ["CSE", "ISE", "ECE", "Mechanical"] },
+  { degree: "B.Tech", streams: ["CSE", "IT", "AI & DS"] },
+  { degree: "BCA", streams: [null] },
+  { degree: "B.Sc", streams: ["Computer Science", "Statistics"] },
+  { degree: "B.Com", streams: [null] },
+  { degree: "MBA", streams: ["Marketing", "Finance"] },
+  { degree: "MCA", streams: [null] },
+] as const;
+const STREETS = ["1st Main Road", "4th Cross", "80 Feet Road", "Church Street", "17th Main", "2nd Stage"];
+const MODES: readonly BatchMode[] = ["OFFLINE", "OFFLINE", "ONLINE", "HYBRID"];
 const LOST_REASONS = [
   "Fees over budget",
-  "Joined another coaching centre",
+  "Joined another institute",
   "Centre too far from home",
   "Not responding",
   "Didn't attend the demo class",
 ];
 const CALL_NOTES = [
   "Discussed the course structure and batch timings.",
-  "Parent asked about the fee instalment options.",
-  "Shared the syllabus and faculty details.",
-  "Asked to call back after the school exams.",
-  "Wants to compare the morning and evening batches.",
+  "Asked about the fee instalment options.",
+  "Shared the syllabus and trainer details.",
+  "Asked to call back after the semester exams.",
+  "Wants to know about placement support.",
 ];
 const DEMO_FEEDBACK = [
-  "Enjoyed the physics session and liked the teaching style.",
-  "Found the pace comfortable. Parent wants to see the test series.",
-  "Asked good questions. Needs extra support in maths.",
-  "Liked the faculty but is unsure about the evening timing.",
+  "Enjoyed the hands-on session and liked the teaching style.",
+  "Found the pace comfortable. Wants to see the placement record.",
+  "Asked good questions. Needs extra support with coding basics.",
+  "Liked the trainer but is unsure about the evening timing.",
 ];
 const CHECKLIST = [
-  { name: "Latest school report card", isRequired: true },
-  { name: "Student ID proof", isRequired: true },
-  { name: "Parent ID proof", isRequired: true },
+  { name: "Degree marks card or provisional certificate", isRequired: true },
+  { name: "10th and 12th marks cards", isRequired: true },
+  { name: "Aadhaar or other ID proof", isRequired: true },
   { name: "Passport-size photo", isRequired: true },
-  { name: "Scholarship test result", isRequired: false },
+  { name: "Resume", isRequired: false },
 ];
 
 const STAGES = [
@@ -94,18 +107,16 @@ const ADMITTED = 5;
 const ENROLLED = 6;
 const LOST = 7;
 
-const SOURCES = ["Website", "Walk-in", "Instagram", "Facebook", "Google Ads", "Referral", "Fair/Event"];
-const TARGET_EXAMS = ["JEE", "NEET", "Foundation", "Boards", "KCET"];
-const BOARDS: readonly Board[] = ["CBSE", "CBSE", "ICSE", "STATE"];
+const SOURCES = ["Website", "Google Form", "Walk-in", "Instagram", "LinkedIn", "Google Ads", "Referral", "College Drive"];
 
+// The courses published on the ScholarLogic LMS. Fees are sample figures.
 const COURSES = [
-  { code: "JEE-2Y", name: "JEE Main + Advanced (2-Year)", fee: 165000, durationMonths: 24, exam: "JEE", classes: ["11th"], instalments: 4 },
-  { code: "JEE-1Y", name: "JEE Main + Advanced (1-Year)", fee: 95000, durationMonths: 12, exam: "JEE", classes: ["12th", "Dropper"], instalments: 3 },
-  { code: "NEET-1Y", name: "NEET UG (1-Year)", fee: 90000, durationMonths: 12, exam: "NEET", classes: ["12th", "Dropper"], instalments: 3 },
-  { code: "NEET-2Y", name: "NEET UG (2-Year)", fee: 155000, durationMonths: 24, exam: "NEET", classes: ["11th"], instalments: 4 },
-  { code: "FND-10", name: "Class 10 Foundation", fee: 48000, durationMonths: 10, exam: "Foundation", classes: ["9th", "10th"], instalments: 3 },
-  { code: "BRD-12", name: "Class 12 Boards (PCM/PCB)", fee: 36000, durationMonths: 9, exam: "Boards", classes: ["12th"], instalments: 2 },
-  { code: "KCET-CR", name: "KCET Crash Course", fee: 22000, durationMonths: 2, exam: "KCET", classes: ["12th", "Dropper"], instalments: 2 },
+  { code: "JFS", name: "Java Full Stack Development", fee: 55000, durationMonths: 4, instalments: 3 },
+  { code: "PFS", name: "Python Full Stack Development", fee: 55000, durationMonths: 4, instalments: 3 },
+  { code: "DA", name: "Data Analytics & Power BI Mastery", fee: 45000, durationMonths: 3, instalments: 3 },
+  { code: "DEVOPS", name: "DevOps Engineering & CI/CD Pipelines", fee: 50000, durationMonths: 3, instalments: 3 },
+  { code: "AWS", name: "AWS / Cloud Architecture & Operations", fee: 48000, durationMonths: 3, instalments: 2 },
+  { code: "DM", name: "Digital Marketing Mastery", fee: 30000, durationMonths: 2, instalments: 2 },
 ] as const;
 
 const ORG = {
@@ -144,6 +155,8 @@ function assertSafeToReset() {
 async function main() {
   assertSafeToReset();
   const now = new Date();
+  // Theta adds its own batches and centres. The tests still get sample ones to work with.
+  const withSampleBatches = process.env.NODE_ENV === "test" || process.env.SEED_SAMPLE_BATCHES === "true";
 
   // TRUNCATE skips the row-level triggers that block deletes, so seeding can start clean.
   await db.$executeRaw`TRUNCATE
@@ -182,15 +195,14 @@ async function main() {
     ),
   );
   const sources = await Promise.all(SOURCES.map((name) => db.leadSource.create({ data: { name } })));
-  const targetExams = await Promise.all(
-    TARGET_EXAMS.map((name, position) => db.targetExam.create({ data: { name, position } })),
-  );
-  const branches = await Promise.all(
-    [
-      { name: "Koramangala", address: "14 Residency Road, Koramangala" },
-      { name: "Indiranagar", address: "42 100 Feet Road, Indiranagar" },
-    ].map((branch) => db.branch.create({ data: { ...branch, city: "Bengaluru" } })),
-  );
+  const branches = withSampleBatches
+    ? await Promise.all(
+        [
+          { name: "Koramangala", address: "14 Residency Road, Koramangala" },
+          { name: "Indiranagar", address: "42 100 Feet Road, Indiranagar" },
+        ].map((branch) => db.branch.create({ data: { ...branch, city: "Bengaluru" } })),
+      )
+    : [];
 
   const courses = await Promise.all(
     COURSES.map(({ code, name, fee, durationMonths }) =>
@@ -202,7 +214,7 @@ async function main() {
 
   type SeatTracker = { id: string; capacity: number; filled: number };
   const batchesByCourse = new Map<string, SeatTracker[]>();
-  for (const course of courses) {
+  for (const course of withSampleBatches ? courses : []) {
     const days = course.durationMonths * 30;
     const startDate = subDays(now, 40);
     const upcomingStart = addDays(now, 25);
@@ -212,7 +224,7 @@ async function main() {
           courseId: course.id,
           branchId: branches[0].id,
           name: "Morning - Koramangala",
-          timing: "Mon–Sat 7–9 AM",
+          timing: "Mon–Fri 7–9 AM",
           mode: "OFFLINE",
           startDate,
           endDate: addDays(startDate, days),
@@ -224,7 +236,7 @@ async function main() {
           courseId: course.id,
           branchId: branches[1].id,
           name: "Evening - Indiranagar",
-          timing: "Mon–Fri 4–6 PM",
+          timing: "Mon–Fri 6–8 PM",
           mode: "HYBRID",
           startDate,
           endDate: addDays(startDate, days),
@@ -302,11 +314,15 @@ async function main() {
     const courseIndex = int(0, courses.length - 1);
     const course = courses[courseIndex];
     const plan = COURSES[courseIndex];
-    const currentClass = pick(plan.classes);
+    const { degree, streams } = pick(DEGREES);
+    const degreeStream = pick(streams);
+    const passOutYear = int(2022, 2027);
+    const college = pick(COLLEGES);
     const assignedTo = counsellors[studentNumber % counsellors.length];
-    const isOpen = stageIndex < ENROLLED;
+    // With no batches to enrol into, finished admissions wait in Admitted for a batch.
+    const shownStage = stageIndex === ENROLLED && !withSampleBatches ? ADMITTED : stageIndex;
+    const isOpen = shownStage < ENROLLED;
     const locality = pick(LOCALITIES);
-    const schoolName = currentClass === "Dropper" ? null : `${pick(SCHOOLS)}, ${locality}`;
 
     // Later stages take longer to reach, so those students enquired further back.
     const age = stageIndex === 0 ? int(0, 6) : stageIndex >= ENROLLED ? int(45, 180) : int(stageIndex * 3, 40);
@@ -328,24 +344,32 @@ async function main() {
         parentName: parent.name,
         parentPhone: parent.phone,
         city: "Bengaluru",
-        currentClass,
-        board: currentClass === "Dropper" ? null : pick(BOARDS),
-        schoolName,
+        address: chance(0.8) ? `${int(1, 240)}, ${pick(STREETS)}, ${locality}` : null,
+        dateOfBirth: new Date(Date.UTC(passOutYear - int(21, 23), int(0, 11), int(1, 28))),
+        college,
+        degree,
+        degreeStream,
+        // Engineering colleges mostly report CGPA, the others percentages.
+        degreeScore: passOutYear > now.getFullYear() ? null : degree.startsWith("B.") ? (int(60, 95) / 10).toFixed(1) : String(int(55, 88)),
+        passOutYear,
+        tenthScore: String(int(62, 98)),
+        twelfthScore: String(int(55, 96)),
+        preferredMode: pick(MODES),
+        joiningDate: stageIndex >= INTERESTED && stageIndex !== LOST ? new Date(`${addDays(now, int(-60, 30)).toISOString().slice(0, 10)}T00:00:00.000Z`) : null,
         budget: chance(0.6) ? Math.round(course.fee * (0.8 + random() * 0.5)) : null,
-        preferredIntake: pick(["January 2027", "April 2027", "June 2027"]),
+        preferredIntake: pick(["December 2026", "January 2027", "February 2027"]),
         lostReason: stageIndex === LOST ? pick(LOST_REASONS) : null,
         createdAt,
         deletedAt: deleted ? subDays(now, int(1, 10)) : null,
-        stageId: stages[stageIndex].id,
+        stageId: stages[shownStage].id,
         sourceId: pick(sources).id,
         courseInterestId: course.id,
-        targetExamId: targetExams.find((exam) => exam.name === plan.exam)!.id,
         assignedToId: assignedTo.id,
       },
     });
 
     // ---------- Timeline ----------
-    const lastStep = stageIndex === LOST ? int(1, INTERESTED) : stageIndex;
+    const lastStep = stageIndex === LOST ? int(1, INTERESTED) : shownStage;
     const elapsedMs = now.getTime() - createdAt.getTime();
     const stepTime = (step: number) =>
       new Date(createdAt.getTime() + (elapsedMs * step) / (Math.max(lastStep, 1) + 1));
@@ -406,7 +430,7 @@ async function main() {
       const noShow = stageIndex === LOST && lastStep === DEMO_SCHEDULED;
       const scheduledAt = isUpcoming ? addDays(now, int(1, 7)) : subHours(stepTime(DEMO_ATTENDED), 1);
       const attended = isUpcoming ? null : !noShow;
-      const batch = chance(0.7) ? pick(batchesByCourse.get(course.id)!) : null;
+      const batch = withSampleBatches && chance(0.7) ? pick(batchesByCourse.get(course.id)!) : null;
       const feedback = attended ? pick(DEMO_FEEDBACK) : null;
 
       await db.demoClass.create({
@@ -503,10 +527,10 @@ async function main() {
       await db.academicRecord.create({
         data: {
           studentId: student.id,
-          qualification: currentClass === "9th" || currentClass === "10th" ? "Class 8" : "Class 10",
-          institution: schoolName ?? `${pick(SCHOOLS)}, ${locality}`,
-          year: int(2023, 2025),
-          score: `${int(68, 97)}%`,
+          qualification: "Class 12 (PUC)",
+          institution: `Government PU College, ${locality}`,
+          year: passOutYear - (degree.startsWith("M") ? 5 : 4),
+          score: `${int(55, 96)}%`,
         },
       });
     }
@@ -529,8 +553,9 @@ async function main() {
       });
 
       // Enrolled students have a seat, and most admitted ones have picked a batch.
-      const seat =
-        stageIndex === ENROLLED
+      const seat = !withSampleBatches
+        ? null
+        : stageIndex === ENROLLED
           ? batchesByCourse.get(course.id)!.find((option) => option.filled < option.capacity)!
           : chance(0.7)
             ? pick(batchesByCourse.get(course.id)!)
@@ -554,10 +579,10 @@ async function main() {
         });
       }
 
-      if (stageIndex === ENROLLED) {
-        seat!.filled += 1;
+      if (stageIndex === ENROLLED && seat) {
+        seat.filled += 1;
         await db.enrollment.create({
-          data: { studentId: student.id, batchId: seat!.id, enrolledAt: addDays(createdAt, 6) },
+          data: { studentId: student.id, batchId: seat.id, enrolledAt: addDays(createdAt, 6) },
         });
       }
 

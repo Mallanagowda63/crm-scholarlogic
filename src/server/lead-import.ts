@@ -1,10 +1,11 @@
 import Papa from "papaparse";
 
 import { db } from "@/lib/db";
-import { BOARD_LABELS, CLASS_OPTIONS, MAX_IMPORT_ROWS } from "@/lib/leads";
+import { MAX_IMPORT_ROWS, MODE_LABELS } from "@/lib/leads";
 import { leadSchema, type LeadValues } from "@/lib/validations/lead";
 
 // Headers are compared in lowercase with punctuation removed, so "Mobile No." matches "mobileno".
+// The LMS Google Form's column names are included, so its response sheet imports as it is.
 const HEADERS: Record<string, keyof typeof ROW_FIELDS> = {
   name: "name",
   studentname: "name",
@@ -20,15 +21,32 @@ const HEADERS: Record<string, keyof typeof ROW_FIELDS> = {
   parentname: "parentName",
   parentphone: "parentPhone",
   city: "city",
-  class: "currentClass",
-  currentclass: "currentClass",
-  board: "board",
-  school: "schoolName",
-  schoolname: "schoolName",
-  targetexam: "targetExam",
-  exam: "targetExam",
+  address: "address",
+  dateofbirth: "dateOfBirth",
+  dob: "dateOfBirth",
+  college: "college",
+  collegeuniversity: "college",
+  collegeanduniversity: "college",
+  degree: "degree",
+  stream: "degreeStream",
+  degreestream: "degreeStream",
+  degreescore: "degreeScore",
+  degreepercentage: "degreeScore",
+  degreepercentagecgpa: "degreeScore",
+  cgpa: "degreeScore",
+  passoutyear: "passOutYear",
+  yearofpassing: "passOutYear",
+  tenth: "tenthScore",
+  tenthpercentage: "tenthScore",
+  tenthscore: "tenthScore",
+  twelfth: "twelfthScore",
+  twelfthpercentage: "twelfthScore",
+  twelfthscore: "twelfthScore",
   course: "course",
   courseofinterest: "course",
+  mode: "mode",
+  preferredmode: "mode",
+  joiningdate: "joiningDate",
   source: "source",
   leadsource: "source",
   budget: "budget",
@@ -45,11 +63,18 @@ const ROW_FIELDS = {
   parentName: "",
   parentPhone: "",
   city: "",
-  currentClass: "",
-  board: "",
-  schoolName: "",
-  targetExam: "",
+  address: "",
+  dateOfBirth: "",
+  college: "",
+  degree: "",
+  degreeStream: "",
+  degreeScore: "",
+  passOutYear: "",
+  tenthScore: "",
+  twelfthScore: "",
   course: "",
+  mode: "",
+  joiningDate: "",
   source: "",
   budget: "",
   preferredIntake: "",
@@ -60,7 +85,13 @@ export type ImportRow = { line: number; values: LeadValues; isDuplicate: boolean
 export type ImportError = { line: number; message: string };
 export type ParsedImport = { rows: ImportRow[]; errors: ImportError[]; total: number; fatal?: string };
 
-const normalizeHeader = (header: string) => header.toLowerCase().replace(/[^a-z]/g, "");
+// "10th %" and "12th %" lose their digits below, so they are told apart first.
+const normalizeHeader = (header: string) =>
+  header
+    .toLowerCase()
+    .replace(/\b10\s*th\b/g, "tenth")
+    .replace(/\b12\s*th\b/g, "twelfth")
+    .replace(/[^a-z]/g, "");
 
 export async function parseLeadCsv(text: string): Promise<ParsedImport> {
   const parsed = Papa.parse<Record<string, string>>(text, {
@@ -79,10 +110,9 @@ export async function parseLeadCsv(text: string): Promise<ParsedImport> {
     return { ...empty, fatal: `The file has more than ${MAX_IMPORT_ROWS.toLocaleString("en-IN")} rows.` };
   }
 
-  const [sources, courses, exams] = await Promise.all([
+  const [sources, courses] = await Promise.all([
     db.leadSource.findMany({ select: { id: true, name: true } }),
     db.course.findMany({ select: { id: true, name: true, code: true } }),
-    db.targetExam.findMany({ select: { id: true, name: true } }),
   ]);
   const byName = (items: { id: string; name: string; code?: string }[], value: string) => {
     const wanted = value.trim().toLowerCase();
@@ -106,18 +136,11 @@ export async function parseLeadCsv(text: string): Promise<ParsedImport> {
     };
     const sourceId = lookUp(row.source, sources, "source");
     const courseInterestId = lookUp(row.course, courses, "course");
-    const targetExamId = lookUp(row.targetExam, exams, "target exam");
 
-    const classValue = row.currentClass.trim().toLowerCase();
-    const currentClass = CLASS_OPTIONS.find((option) => option.toLowerCase() === classValue) ?? "";
-    if (classValue && !currentClass) problems.push(`Unknown class "${row.currentClass.trim()}"`);
-
-    const boardValue = row.board.trim().toLowerCase();
-    const board =
-      (Object.keys(BOARD_LABELS) as (keyof typeof BOARD_LABELS)[]).find(
-        (key) => key.toLowerCase() === boardValue || BOARD_LABELS[key].toLowerCase() === boardValue,
-      ) ?? "";
-    if (boardValue && !board) problems.push(`Unknown board "${row.board.trim()}"`);
+    const modeValue = row.mode.trim().toLowerCase();
+    const preferredMode =
+      (Object.keys(MODE_LABELS) as (keyof typeof MODE_LABELS)[]).find((key) => key.toLowerCase() === modeValue) ?? "";
+    if (modeValue && !preferredMode) problems.push(`Unknown mode "${row.mode.trim()}"`);
 
     const result = leadSchema.safeParse({
       name: row.name.replace(/^'/, ""),
@@ -127,10 +150,17 @@ export async function parseLeadCsv(text: string): Promise<ParsedImport> {
       parentName: row.parentName.replace(/^'/, ""),
       parentPhone: row.parentPhone,
       city: row.city,
-      currentClass,
-      board,
-      schoolName: row.schoolName,
-      targetExamId,
+      address: row.address,
+      dateOfBirth: row.dateOfBirth.trim(),
+      college: row.college,
+      degree: row.degree,
+      degreeStream: row.degreeStream,
+      degreeScore: row.degreeScore,
+      passOutYear: row.passOutYear,
+      tenthScore: row.tenthScore,
+      twelfthScore: row.twelfthScore,
+      preferredMode,
+      joiningDate: row.joiningDate.trim(),
       courseInterestId,
       sourceId,
       budget: row.budget,
