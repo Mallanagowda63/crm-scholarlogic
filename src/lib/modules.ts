@@ -123,7 +123,7 @@ export const MODULES: readonly ModuleDef[] = [
     label: "Settings",
     href: "/settings",
     icon: Settings,
-    description: "Users, roles, pipeline stages, lead sources, target exams and branding.",
+    description: "Users, roles, pipeline stages, lead sources, branches and branding.",
     section: "Admin",
     roles: ["ADMIN"],
   },

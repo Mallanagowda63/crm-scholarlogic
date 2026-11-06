@@ -1,12 +1,15 @@
 import { z } from "zod";
 
-export const CLASS_OPTIONS = ["8th", "9th", "10th", "11th", "12th", "Dropper"] as const;
+export const MODE_LABELS = { OFFLINE: "Offline", ONLINE: "Online", HYBRID: "Hybrid" } as const;
 
-export const BOARD_LABELS = { CBSE: "CBSE", ICSE: "ICSE", STATE: "State board" } as const;
+/** Such as "B.E CSE", for a short line under a name. */
+export function degreeLine(person: { degree: string | null; degreeStream: string | null }) {
+  return [person.degree, person.degreeStream].filter(Boolean).join(" ") || null;
+}
 
 export const LOST_REASONS = [
   "Fees over budget",
-  "Joined another coaching centre",
+  "Joined another institute",
   "Centre too far from home",
   "Not responding",
   "Didn't attend the demo class",

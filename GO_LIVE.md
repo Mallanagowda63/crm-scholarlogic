@@ -56,14 +56,16 @@ These include ID proofs and school records, some belonging to minors.
 
 ## Real data
 
-- [ ] Replace the sample **course fees** and instalment plans with Theta's real ones.
+- [ ] Replace the sample **course fees** and instalment plans with Theta's real ones. The six course names match the ScholarLogic LMS (scholarlogiclms.in/api/courses), but the fees, durations and batches are made up.
 - [ ] Confirm the **GST rate**. The sample data assumes 18% on every course.
 - [ ] Have an accountant review the **receipt format**, including the SAC code (`999293`), wording, and whether a receipt or a tax invoice is required. Receipts assume CGST and SGST, so students from other states need checking for IGST.
 - [ ] Set the **receipt prefix** before the first real payment, as numbers can't be changed after that.
 - [ ] Clear the sample receipts before going live, so real numbering starts at 0001.
 - [ ] Replace the sample **GSTIN**, legal name, address, phone and email in Settings, under Organisation & branding.
 - [ ] Replace the sample **branches** (Koramangala and Indiranagar) with Theta's real centres.
-- [ ] Review the sample pipeline stages, lead sources, target exams and message templates.
+- [ ] Review the sample pipeline stages, lead sources, message templates, document types and the admission checklist (degree marks card, 10th and 12th marks cards, ID proof, photo, resume).
+- [ ] Bring in registrations from the LMS Google Form. The CRM doesn't sync with the LMS. To move people across, download the form's responses as CSV and use **Import** on the Leads page, which understands the form's column names. Check the preview for unknown course names, as the form's answers must match a course name or code in the CRM.
+- [ ] Decide whether the LMS or the CRM is the main record for a student once they're verified, so details aren't kept up to date in two places.
 - [ ] **Create the first real admin account** with `npm run create-admin`.
 - [ ] Upload Theta's **logo** and set its brand colours in Settings.
 - [ ] Remove the demo accounts and all sample records, which use `@theta.example` and `@example.com` addresses and made-up phone numbers.
@@ -73,4 +75,4 @@ These include ID proofs and school records, some belonging to minors.
 - [ ] Try `npm run create-admin` in a real terminal. Its hidden password prompt has only been tested with simulated input.
 
 - [ ] Run `npm test` against the release build, and make sure everything passes.
-- [ ] Confirm there's a lawful basis and a retention policy for students' and parents' personal data, including minors, under India's data protection law. Student records are never hard-deleted by design, so decide how to handle erasure requests.
+- [ ] Confirm there's a lawful basis and a retention policy for students' and parents' personal data, including minors, under India's data protection law. Records now hold dates of birth, addresses and marks, which makes this more pressing. Student records are never hard-deleted by design, so decide how to handle erasure requests.

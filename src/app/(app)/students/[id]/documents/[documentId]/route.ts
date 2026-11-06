@@ -8,7 +8,7 @@ type Props = { params: Promise<{ id: string; documentId: string }> };
 
 export async function GET(_request: Request, { params }: Props) {
   const user = await requireModuleAccess("students");
-  // Accounts doesn't need ID proofs or school records to handle fees.
+  // Accounts doesn't need ID proofs or marks cards to handle fees.
   if (user.role === "ACCOUNTS") return new Response("Forbidden", { status: 403 });
 
   const { id, documentId } = await params;

@@ -10,7 +10,6 @@ test.describe("sample data", () => {
       where: { deletedAt: null },
       include: {
         stage: true,
-        targetExam: true,
         courseInterest: true,
         demoClasses: true,
         activities: true,
@@ -45,24 +44,34 @@ test.describe("sample data", () => {
     expect(await appDb.student.count()).toBe(120);
   });
 
-  test("students have sensible coaching details", async () => {
+  test("uses the courses published on the LMS", async () => {
+    const courses = await db.course.findMany({ orderBy: { code: "asc" } });
+    expect(courses.map((course) => course.name)).toEqual([
+      "AWS / Cloud Architecture & Operations",
+      "Data Analytics & Power BI Mastery",
+      "DevOps Engineering & CI/CD Pipelines",
+      "Digital Marketing Mastery",
+      "Java Full Stack Development",
+      "Python Full Stack Development",
+    ]);
+  });
+
+  test("students have the details the LMS registration form collects", async () => {
     const students = await load();
     for (const student of students) {
-      expect(student.currentClass).toBeTruthy();
-      expect(student.targetExam).toBeTruthy();
       expect(student.phone).toMatch(/^\+91[6-9]\d{9}$/);
       if (student.email) expect(student.email).toMatch(/@example\.com$/);
-      if (student.currentClass === "Dropper") {
-        expect(student.board).toBeNull();
-        expect(student.schoolName).toBeNull();
-      } else {
-        expect(student.board).toBeTruthy();
-        expect(student.schoolName).toBeTruthy();
-      }
-      const code = student.courseInterest!.code;
-      if (code.endsWith("-2Y")) expect(student.currentClass).toBe("11th");
-      else if (code === "FND-10") expect(["9th", "10th"]).toContain(student.currentClass);
-      else expect(["12th", "Dropper"]).toContain(student.currentClass);
+      expect(student.college).toBeTruthy();
+      expect(student.degree).toBeTruthy();
+      expect(student.passOutYear).toBeGreaterThanOrEqual(2022);
+      expect(Number(student.tenthScore)).toBeLessThanOrEqual(100);
+      expect(Number(student.twelfthScore)).toBeLessThanOrEqual(100);
+      expect(student.preferredMode).toBeTruthy();
+      expect(student.dateOfBirth!.getUTCFullYear()).toBeLessThan(student.passOutYear! - 18);
+      // Nobody has a degree score before they finish.
+      if (student.passOutYear! > new Date().getFullYear()) expect(student.degreeScore).toBeNull();
+      expect(student.currentClass).toBeNull();
+      expect(student.targetExamId).toBeNull();
     }
     const parents = students.map((student) => student.parentPhone);
     expect(new Set(parents).size).toBeLessThan(parents.length);

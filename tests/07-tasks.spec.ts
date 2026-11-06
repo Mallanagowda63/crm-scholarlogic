@@ -348,7 +348,7 @@ test.describe("demo classes", () => {
 
   test("scheduling moves the lead forward, and records history", async ({ page }) => {
     const student = await makeStudent("Demo Schedule Finch");
-    const course = await db.course.findUniqueOrThrow({ where: { code: "JEE-2Y" } });
+    const course = await db.course.findUniqueOrThrow({ where: { code: "JFS" } });
     await signIn(page, "counsellor");
     await openPanel(page, student.id);
 

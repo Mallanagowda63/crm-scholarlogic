@@ -313,7 +313,7 @@ test.describe("the profile", () => {
     await dialog.getByRole("button", { name: "Save" }).click();
     await expect(dialog.getByText("Enter the qualification")).toBeVisible();
     await dialog.getByLabel("Qualification").fill("Class 10");
-    await dialog.getByLabel("School or institution").fill("Test School");
+    await dialog.getByLabel("College or institution").fill("Test School");
     await dialog.getByLabel("Year").fill("1800");
     await dialog.getByRole("button", { name: "Save" }).click();
     await expect(dialog.getByText(/Enter a year from 1990/)).toBeVisible();
@@ -427,7 +427,7 @@ test.describe("documents", () => {
     await expect(page.getByRole("button", { name: "Choose file" })).toBeDisabled();
 
     const body = "%PDF-1.4 the real contents";
-    await upload(page, "School report card", pdf("रिपोर्ट card.pdf", body));
+    await upload(page, "Degree marks card", pdf("रिपोर्ट card.pdf", body));
     await expectToast(page, "Document uploaded");
     await expect(page.getByText("रिपोर्ट card.pdf")).toBeVisible();
 

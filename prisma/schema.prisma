@@ -143,11 +143,26 @@ model Student {
   parentName      String?
   parentPhone     String?
   city            String?
+  address         String?
+  dateOfBirth     DateTime? @db.Date
   photoUrl        String?
-  /// Such as 9th, 10th, 11th, 12th or Dropper.
+  /// School-coaching fields, kept for older records but no longer shown in forms.
   currentClass    String?
   board           Board?
   schoolName      String?
+  /// Matches the LMS registration form, which trains graduates.
+  college         String?
+  /// Such as B.E or B.Tech.
+  degree          String?
+  /// Such as CSE.
+  degreeStream    String?
+  /// Free text because colleges report percentages and CGPA.
+  degreeScore     String?
+  passOutYear     Int?
+  tenthScore      String?
+  twelfthScore    String?
+  preferredMode   BatchMode?
+  joiningDate     DateTime? @db.Date
   budget          Int?
   preferredIntake String?
   lostReason      String?
@@ -178,6 +193,7 @@ model Student {
   demoClasses     DemoClass[]
 
   @@index([targetExamId])
+  @@index([passOutYear])
   @@index([phone])
   @@index([parentPhone])
   @@index([email])
