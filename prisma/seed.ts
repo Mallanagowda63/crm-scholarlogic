@@ -155,6 +155,8 @@ function assertSafeToReset() {
 async function main() {
   assertSafeToReset();
   const now = new Date();
+  // Theta adds its own batches and centres. The tests still get sample ones to work with.
+  const withSampleBatches = process.env.NODE_ENV === "test" || process.env.SEED_SAMPLE_BATCHES === "true";
 
   // TRUNCATE skips the row-level triggers that block deletes, so seeding can start clean.
   await db.$executeRaw`TRUNCATE
@@ -193,12 +195,14 @@ async function main() {
     ),
   );
   const sources = await Promise.all(SOURCES.map((name) => db.leadSource.create({ data: { name } })));
-  const branches = await Promise.all(
-    [
-      { name: "Koramangala", address: "14 Residency Road, Koramangala" },
-      { name: "Indiranagar", address: "42 100 Feet Road, Indiranagar" },
-    ].map((branch) => db.branch.create({ data: { ...branch, city: "Bengaluru" } })),
-  );
+  const branches = withSampleBatches
+    ? await Promise.all(
+        [
+          { name: "Koramangala", address: "14 Residency Road, Koramangala" },
+          { name: "Indiranagar", address: "42 100 Feet Road, Indiranagar" },
+        ].map((branch) => db.branch.create({ data: { ...branch, city: "Bengaluru" } })),
+      )
+    : [];
 
   const courses = await Promise.all(
     COURSES.map(({ code, name, fee, durationMonths }) =>
@@ -210,7 +214,7 @@ async function main() {
 
   type SeatTracker = { id: string; capacity: number; filled: number };
   const batchesByCourse = new Map<string, SeatTracker[]>();
-  for (const course of courses) {
+  for (const course of withSampleBatches ? courses : []) {
     const days = course.durationMonths * 30;
     const startDate = subDays(now, 40);
     const upcomingStart = addDays(now, 25);
@@ -315,7 +319,9 @@ async function main() {
     const passOutYear = int(2022, 2027);
     const college = pick(COLLEGES);
     const assignedTo = counsellors[studentNumber % counsellors.length];
-    const isOpen = stageIndex < ENROLLED;
+    // With no batches to enrol into, finished admissions wait in Admitted for a batch.
+    const shownStage = stageIndex === ENROLLED && !withSampleBatches ? ADMITTED : stageIndex;
+    const isOpen = shownStage < ENROLLED;
     const locality = pick(LOCALITIES);
 
     // Later stages take longer to reach, so those students enquired further back.
@@ -355,7 +361,7 @@ async function main() {
         lostReason: stageIndex === LOST ? pick(LOST_REASONS) : null,
         createdAt,
         deletedAt: deleted ? subDays(now, int(1, 10)) : null,
-        stageId: stages[stageIndex].id,
+        stageId: stages[shownStage].id,
         sourceId: pick(sources).id,
         courseInterestId: course.id,
         assignedToId: assignedTo.id,
@@ -363,7 +369,7 @@ async function main() {
     });
 
     // ---------- Timeline ----------
-    const lastStep = stageIndex === LOST ? int(1, INTERESTED) : stageIndex;
+    const lastStep = stageIndex === LOST ? int(1, INTERESTED) : shownStage;
     const elapsedMs = now.getTime() - createdAt.getTime();
     const stepTime = (step: number) =>
       new Date(createdAt.getTime() + (elapsedMs * step) / (Math.max(lastStep, 1) + 1));
@@ -424,7 +430,7 @@ async function main() {
       const noShow = stageIndex === LOST && lastStep === DEMO_SCHEDULED;
       const scheduledAt = isUpcoming ? addDays(now, int(1, 7)) : subHours(stepTime(DEMO_ATTENDED), 1);
       const attended = isUpcoming ? null : !noShow;
-      const batch = chance(0.7) ? pick(batchesByCourse.get(course.id)!) : null;
+      const batch = withSampleBatches && chance(0.7) ? pick(batchesByCourse.get(course.id)!) : null;
       const feedback = attended ? pick(DEMO_FEEDBACK) : null;
 
       await db.demoClass.create({
@@ -547,8 +553,9 @@ async function main() {
       });
 
       // Enrolled students have a seat, and most admitted ones have picked a batch.
-      const seat =
-        stageIndex === ENROLLED
+      const seat = !withSampleBatches
+        ? null
+        : stageIndex === ENROLLED
           ? batchesByCourse.get(course.id)!.find((option) => option.filled < option.capacity)!
           : chance(0.7)
             ? pick(batchesByCourse.get(course.id)!)
@@ -572,10 +579,10 @@ async function main() {
         });
       }
 
-      if (stageIndex === ENROLLED) {
-        seat!.filled += 1;
+      if (stageIndex === ENROLLED && seat) {
+        seat.filled += 1;
         await db.enrollment.create({
-          data: { studentId: student.id, batchId: seat!.id, enrolledAt: addDays(createdAt, 6) },
+          data: { studentId: student.id, batchId: seat.id, enrolledAt: addDays(createdAt, 6) },
         });
       }
 

@@ -149,3 +149,5 @@ Set `x-forwarded-for` from a trusted proxy in production, because clients can fo
 - **Dates:** stored in UTC and shown in India time.
 - **Deleting:** `Student`, `AcademicRecord`, `Document`, `Admission` and `Payment` are soft-deleted by setting `deletedAt`. A database trigger blocks `DELETE` on these and on `FeePlan`, `Instalment` and `Receipt`. Cancel a plan or instalment with `cancelledAt`.
 - **Reading soft-deleted data:** top-level queries hide deleted rows automatically. An `include` of those models must add `where: { deletedAt: null }` itself.
+
+To put a test copy on a server, see [DEPLOY.md](DEPLOY.md).
