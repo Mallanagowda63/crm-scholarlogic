@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { indiaDayRange } from "@/lib/format";
 import { BOARD_COLUMN_LIMIT, PAGE_SIZE, type LeadFilters } from "@/lib/leads";
 import type { CurrentUser } from "@/lib/session";
+import type { Tx } from "@/server/audit";
 
 /** Counsellors only ever see and change leads assigned to them. */
 export function ownedBy(user: CurrentUser): Prisma.StudentWhereInput {
@@ -235,4 +236,19 @@ export async function firstStageId() {
     select: { id: true },
   });
   return stage.id;
+}
+
+// One lock number for every round-robin pick, so two new leads can't go to the same counsellor at once.
+export const ROUND_ROBIN_LOCK = 727001;
+
+/** The active counsellor who was given a lead least recently. */
+export async function pickNextCounsellor(tx: Tx) {
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(${ROUND_ROBIN_LOCK})`;
+  const next = await tx.user.findFirst({
+    where: { role: "COUNSELLOR", isActive: true },
+    orderBy: [{ lastAssignedAt: { sort: "asc", nulls: "first" } }, { id: "asc" }],
+    select: { id: true },
+  });
+  if (next) await tx.user.update({ where: { id: next.id }, data: { lastAssignedAt: new Date() } });
+  return next?.id ?? null;
 }

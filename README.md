@@ -2,7 +2,7 @@
 
 A CRM for Theta, an IT training institute for graduates. Lead details match the registration form on the ScholarLogic LMS. It manages the student journey: enquiry → contacted → demo class → admission → fee payment → enrolled.
 
-**Status:** All 8 build phases are complete. See [GO_LIVE.md](GO_LIVE.md) for what must be done before production.
+**Status:** The 8 build phases are complete. Phase 9 matched lead details to the LMS registration form, and Phase 10 added call enquiries. See [GO_LIVE.md](GO_LIVE.md) for what must be done before production.
 
 
 ## Requirements
@@ -76,6 +76,15 @@ Each role gets its own dashboard. Counsellors see only their own numbers, accoun
 - **Funnel:** how many people ever reached each stage, so someone lost later still counts for the stages they passed through.
 - **Conversion rate:** enrolled, of the enquiries in the period, grouped by when they enquired.
 - **Revenue:** payments received in the period, including GST and leaving out cancelled ones.
+
+## Call enquiries
+
+**Call enquiry** on the Leads page is a short form a counsellor can fill in while on the phone. Type the number first:
+
+- **A new number** needs a name, and optionally a course. It becomes a lead from the **Phone Call** source, with the call on its timeline. A counsellor keeps their own calls. An admin's calls go to counsellors in turn, and that counsellor gets a notification.
+- **A number already in the CRM** shows who it belongs to. Saving logs the call on that profile and opens it, instead of making a duplicate. If the lead belongs to another counsellor, a counsellor can't log the call and is asked to go to an admin.
+
+Admins can rename the Phone Call source in Settings, and call enquiries keep using it.
 
 ## Messages
 

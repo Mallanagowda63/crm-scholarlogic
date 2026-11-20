@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, KanbanSquare, Loader2, Plus, Search, Table2, Upload, X } from "lucide-react";
+import { Download, KanbanSquare, Loader2, PhoneIncoming, Plus, Search, Table2, Upload, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
@@ -36,7 +36,7 @@ export function LeadsWorkspace({
 }
 
 function LeadsToolbar({ filters }: { filters: LeadFilters }) {
-  const { options, canManage, openCreate } = useLeadWorkspace();
+  const { options, canManage, openCreate, openCallEnquiry } = useLeadWorkspace();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [importOpen, setImportOpen] = useState(false);
@@ -46,11 +46,14 @@ function LeadsToolbar({ filters }: { filters: LeadFilters }) {
   useEffect(() => {
     latestFilters.current = filters;
   }, [filters]);
+  // The search this toolbar last asked for, to tell its own navigation apart from links and the back button.
+  const requestedQ = useRef(filters.q);
 
   const navigate = useCallback(
     (changes: Partial<LeadFilters>) => {
       const next = { ...latestFilters.current, page: 1, ...changes };
       latestFilters.current = next;
+      requestedQ.current = next.q;
       const query = leadsQuery(next);
       startTransition(() => router.push(query ? `/leads?${query}` : "/leads", { scroll: false }));
     },
@@ -61,6 +64,12 @@ function LeadsToolbar({ filters }: { filters: LeadFilters }) {
   const [search, setSearch] = useState(filters.q);
   const searchInput = useRef<HTMLInputElement>(null);
   useTypedBeforeHydration(searchInput, search, setSearch);
+  // Links such as "Clear filters" change the search without typing, so the box follows them.
+  useEffect(() => {
+    if (filters.q === requestedQ.current) return;
+    requestedQ.current = filters.q;
+    setSearch(filters.q);
+  }, [filters.q]);
   useEffect(() => {
     if (search.trim() === filters.q) return;
     const timer = setTimeout(() => navigate({ q: search.trim() }), 300);
@@ -88,6 +97,10 @@ function LeadsToolbar({ filters }: { filters: LeadFilters }) {
               <Download aria-hidden />
               Export
             </a>
+            <Button variant="outline" size="lg" onClick={openCallEnquiry}>
+              <PhoneIncoming aria-hidden />
+              Call enquiry
+            </Button>
             <Button size="lg" onClick={openCreate}>
               <Plus aria-hidden />
               New lead

@@ -12,7 +12,7 @@ import { getUserWithAccess, type CurrentUser } from "@/lib/session";
 import { leadSchema, type LeadFormValues } from "@/lib/validations/lead";
 import { changedFields, recordAudit, type Tx } from "@/server/audit";
 import { parseLeadCsv, type ImportError } from "@/server/lead-import";
-import { findDuplicates, firstStageId, ownedBy, type DuplicateMatch } from "@/server/leads";
+import { findDuplicates, firstStageId, ownedBy, pickNextCounsellor, ROUND_ROBIN_LOCK, type DuplicateMatch } from "@/server/leads";
 import { EnrolmentError, LOCKED_TRANSACTION, releaseSeat, takeSeat } from "@/server/stages";
 import { syncNextFollowUp, viewableWhere } from "@/server/students";
 import { moveOpenWork } from "@/server/tasks";
@@ -32,9 +32,6 @@ const NO_ACCESS = "You don't have permission to do that.";
 const NOT_FOUND = "That lead no longer exists or isn't assigned to you.";
 const GENERIC_ERROR = "Something went wrong. Please try again.";
 
-// One lock number for every round-robin pick, so two new leads can't go to the same counsellor at once.
-const ROUND_ROBIN_LOCK = 727001;
-
 const idSchema = z.string().min(1).max(64);
 const idsSchema = z.array(idSchema).min(1).max(MAX_BULK);
 const lostReasonSchema = z.string().trim().max(200).optional();
@@ -42,17 +39,6 @@ const lostReasonSchema = z.string().trim().max(200).optional();
 function revalidateLeadPages() {
   revalidatePath("/leads");
   revalidatePath("/students", "layout");
-}
-
-async function pickNextCounsellor(tx: Tx) {
-  await tx.$executeRaw`SELECT pg_advisory_xact_lock(${ROUND_ROBIN_LOCK})`;
-  const next = await tx.user.findFirst({
-    where: { role: "COUNSELLOR", isActive: true },
-    orderBy: [{ lastAssignedAt: { sort: "asc", nulls: "first" } }, { id: "asc" }],
-    select: { id: true },
-  });
-  if (next) await tx.user.update({ where: { id: next.id }, data: { lastAssignedAt: new Date() } });
-  return next?.id ?? null;
 }
 
 async function isAssignable(id: string) {
