@@ -20,11 +20,11 @@ export function tabsForRole(role: Role) {
 }
 
 export const DOCUMENT_TYPES = [
-  "School report card",
-  "Student ID proof",
-  "Parent ID proof",
+  "Degree marks card",
+  "10th and 12th marks cards",
+  "Aadhaar or other ID proof",
   "Passport-size photo",
-  "Scholarship test result",
+  "Resume",
   "Other",
 ] as const;
 

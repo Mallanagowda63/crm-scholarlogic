@@ -3,7 +3,7 @@ import Papa from "papaparse";
 import { csvSafe, UTF8_BOM } from "@/lib/csv";
 import { db } from "@/lib/db";
 import { formatShortDate } from "@/lib/format";
-import { BOARD_LABELS, leadFiltersSchema } from "@/lib/leads";
+import { leadFiltersSchema, MODE_LABELS } from "@/lib/leads";
 import { requireModuleAccess } from "@/lib/session";
 import { recordAudit } from "@/server/audit";
 import { tableWhere } from "@/server/leads";
@@ -23,7 +23,6 @@ export async function GET(request: Request) {
       stage: { select: { name: true } },
       source: { select: { name: true } },
       courseInterest: { select: { name: true } },
-      targetExam: { select: { name: true } },
       assignedTo: { select: { name: true } },
     },
   });
@@ -37,11 +36,18 @@ export async function GET(request: Request) {
       lead.parentName,
       lead.parentPhone,
       lead.city,
-      lead.currentClass,
-      lead.board && BOARD_LABELS[lead.board],
-      lead.schoolName,
-      lead.targetExam?.name,
+      lead.address,
+      lead.dateOfBirth?.toISOString().slice(0, 10),
+      lead.college,
+      lead.degree,
+      lead.degreeStream,
+      lead.degreeScore,
+      lead.passOutYear === null ? "" : String(lead.passOutYear),
+      lead.tenthScore,
+      lead.twelfthScore,
       lead.courseInterest?.name,
+      lead.preferredMode && MODE_LABELS[lead.preferredMode],
+      lead.joiningDate?.toISOString().slice(0, 10),
       lead.source?.name,
       lead.budget === null ? "" : String(lead.budget / 100),
       lead.preferredIntake,
@@ -63,8 +69,9 @@ export async function GET(request: Request) {
 
   const csv = Papa.unparse({
     fields: [
-      "Name", "Phone", "Alternate Phone", "Email", "Parent Name", "Parent Phone", "City", "Class", "Board", "School",
-      "Target Exam", "Course", "Source", "Budget", "Preferred Intake", "Stage", "Lost Reason", "Counsellor",
+      "Name", "Phone", "Alternate Phone", "Email", "Parent Name", "Parent Phone", "City", "Address", "Date of Birth",
+      "College", "Degree", "Stream", "Degree Score", "Pass-out Year", "10th Score", "12th Score", "Course", "Mode",
+      "Joining Date", "Source", "Budget", "Preferred Intake", "Stage", "Lost Reason", "Counsellor",
       "Next Follow-up", "Created",
     ],
     data: rows,

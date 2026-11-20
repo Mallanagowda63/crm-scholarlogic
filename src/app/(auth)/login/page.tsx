@@ -33,13 +33,14 @@ export default async function LoginPage({
   if (await getCurrentUser()) redirect(callbackUrl);
 
   const branding = await getBranding();
-  const demoAccounts =
-    process.env.NODE_ENV === "production"
-      ? undefined
-      : {
-          password: DEMO_PASSWORD,
-          users: DEMO_USERS.map(({ email, role }) => ({ email, role: ROLE_LABELS[role] })),
-        };
+  // Production hides them, as they show a password, unless a local copy turns them on.
+  const showDemoAccounts = process.env.NODE_ENV !== "production" || process.env.SHOW_DEMO_ACCOUNTS === "true";
+  const demoAccounts = !showDemoAccounts
+    ? undefined
+    : {
+        password: DEMO_PASSWORD,
+        users: DEMO_USERS.map(({ email, role }) => ({ email, role: ROLE_LABELS[role] })),
+      };
 
   return (
     <div className="grid min-h-dvh lg:grid-cols-2">

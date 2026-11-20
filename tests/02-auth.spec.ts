@@ -24,7 +24,7 @@ test.describe("signing in", () => {
 
   test("demo accounts are hidden in production builds", async ({ page }) => {
     await page.goto("/login");
-    await expect(page.getByText("Development only")).toHaveCount(0);
+    await expect(page.getByText(/Demo accounts for trying ScholarLogic/)).toHaveCount(0);
     expect(await page.content()).not.toContain(DEMO_PASSWORD);
   });
 

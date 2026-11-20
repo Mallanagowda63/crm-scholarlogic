@@ -32,6 +32,12 @@ export default defineConfig({
     url: `http://localhost:${PORT}/login`,
     timeout: 240_000,
     reuseExistingServer: false,
-    env: { DATABASE_URL: testUrl.toString(), NEXT_DIST_DIR: ".next-test", UPLOAD_DIR: ".next-test/uploads" },
+    env: {
+      DATABASE_URL: testUrl.toString(),
+      NEXT_DIST_DIR: ".next-test",
+      UPLOAD_DIR: ".next-test/uploads",
+      // A local .env may turn these on, but the tests check production behaviour.
+      SHOW_DEMO_ACCOUNTS: "false",
+    },
   },
 });

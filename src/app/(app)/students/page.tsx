@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { db } from "@/lib/db";
 import { formatShortDate } from "@/lib/format";
+import { degreeLine } from "@/lib/leads";
 import { formatPhone } from "@/lib/phone";
 import { requireModuleAccess, type CurrentUser } from "@/lib/session";
 import { STUDENTS_PAGE_SIZE } from "@/lib/students";
@@ -107,7 +108,7 @@ async function StudentsTable({ user, filters }: { user: CurrentUser; filters: Fi
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead className="hidden sm:table-cell">Class</TableHead>
+              <TableHead className="hidden sm:table-cell">Degree</TableHead>
               <TableHead className="hidden md:table-cell">Course</TableHead>
               <TableHead className="hidden lg:table-cell">Batch</TableHead>
               <TableHead className="hidden md:table-cell">Counsellor</TableHead>
@@ -128,7 +129,7 @@ async function StudentsTable({ user, filters }: { user: CurrentUser; filters: Fi
                     </Link>
                     <span className="block text-xs text-muted-foreground">{formatPhone(student.phone)}</span>
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell">{student.currentClass ?? "—"}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{degreeLine(student) ?? "—"}</TableCell>
                   <TableCell className="hidden md:table-cell">
                     <span className="block max-w-52 truncate">{student.courseInterest?.name ?? "—"}</span>
                   </TableCell>

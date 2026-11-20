@@ -19,11 +19,11 @@ const GENERIC_ERROR = "Something went wrong. Please try again.";
 const idSchema = z.string().min(1).max(64);
 
 const DEFAULT_CHECKLIST = [
-  { name: "Latest school report card", isRequired: true },
-  { name: "Student ID proof", isRequired: true },
-  { name: "Parent ID proof", isRequired: true },
+  { name: "Degree marks card or provisional certificate", isRequired: true },
+  { name: "10th and 12th marks cards", isRequired: true },
+  { name: "Aadhaar or other ID proof", isRequired: true },
   { name: "Passport-size photo", isRequired: true },
-  { name: "Scholarship test result", isRequired: false },
+  { name: "Resume", isRequired: false },
 ];
 
 async function getEditor() {

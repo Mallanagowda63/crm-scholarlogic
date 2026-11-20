@@ -13,7 +13,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { BOARD_LABELS, CLASS_OPTIONS } from "@/lib/leads";
+import { MODE_LABELS } from "@/lib/leads";
 import { EMPTY_LEAD, leadSchema, type LeadFormValues, type LeadValues } from "@/lib/validations/lead";
 import { createLead, getLeadForEdit, updateLead } from "@/server/actions/leads";
 import type { DuplicateMatch, LeadOptions } from "@/server/leads";
@@ -128,6 +128,8 @@ export function LeadSheet({
               <TextField label="Alternate phone" {...field("alternatePhone")} type="tel" />
               <TextField label="Email" {...field("email")} type="email" />
               <TextField label="City" {...field("city")} />
+              <TextField label="Date of birth" {...field("dateOfBirth")} type="date" />
+              <TextField label="Address" {...field("address")} full />
             </FormSection>
 
             <FormSection title="Parent">
@@ -135,29 +137,14 @@ export function LeadSheet({
               <TextField label="Parent's phone" {...field("parentPhone")} type="tel" />
             </FormSection>
 
-            <FormSection title="Academics">
-              <SelectField label="Current class" {...field("currentClass")}>
-                {CLASS_OPTIONS.map((option) => (
-                  <NativeSelectOption key={option} value={option}>
-                    {option}
-                  </NativeSelectOption>
-                ))}
-              </SelectField>
-              <SelectField label="Board" {...field("board")}>
-                {Object.entries(BOARD_LABELS).map(([value, label]) => (
-                  <NativeSelectOption key={value} value={value}>
-                    {label}
-                  </NativeSelectOption>
-                ))}
-              </SelectField>
-              <TextField label="School" {...field("schoolName")} />
-              <SelectField label="Target exam" {...field("targetExamId")}>
-                {options.targetExams.map(({ id, name }) => (
-                  <NativeSelectOption key={id} value={id}>
-                    {name}
-                  </NativeSelectOption>
-                ))}
-              </SelectField>
+            <FormSection title="Education">
+              <TextField label="College & university" {...field("college")} full />
+              <TextField label="Degree" {...field("degree")} placeholder="B.E or B.Tech" />
+              <TextField label="Stream" {...field("degreeStream")} placeholder="CSE" />
+              <TextField label="Degree % or CGPA" {...field("degreeScore")} inputMode="decimal" />
+              <TextField label="Pass-out year" {...field("passOutYear")} inputMode="numeric" />
+              <TextField label="10th %" {...field("tenthScore")} inputMode="decimal" />
+              <TextField label="12th %" {...field("twelfthScore")} inputMode="decimal" />
             </FormSection>
 
             <FormSection title="Enquiry">
@@ -175,6 +162,14 @@ export function LeadSheet({
                   </NativeSelectOption>
                 ))}
               </SelectField>
+              <SelectField label="Mode" {...field("preferredMode")}>
+                {Object.entries(MODE_LABELS).map(([value, label]) => (
+                  <NativeSelectOption key={value} value={value}>
+                    {label}
+                  </NativeSelectOption>
+                ))}
+              </SelectField>
+              <TextField label="Joining date" {...field("joiningDate")} type="date" />
               <TextField label="Budget (₹)" {...field("budget")} inputMode="numeric" />
               <TextField label="Preferred intake" {...field("preferredIntake")} placeholder="June 2027" />
               {canManage && (

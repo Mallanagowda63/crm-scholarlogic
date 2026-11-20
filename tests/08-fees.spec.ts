@@ -23,7 +23,7 @@ async function makeLead(name: string, owner = "counsellor", stage = "Interested"
   });
 }
 
-const course = (code = "FND-10") => db.course.findUniqueOrThrow({ where: { code }, include: { batches: true } });
+const course = (code = "DA") => db.course.findUniqueOrThrow({ where: { code }, include: { batches: true } });
 
 /** A lead with an admission and fee plan of 3 instalments, ready for payments. */
 async function makeAdmitted(name: string, options: { owner?: string; daysUntilFirstDue?: number; withBatch?: boolean; withPlan?: boolean } = {}) {
@@ -145,8 +145,8 @@ test.describe("courses and batches", () => {
     await page.goto("/courses", { waitUntil: "networkidle" });
     await page.getByRole("button", { name: "New course" }).click();
     const dialog = page.getByRole("dialog");
-    await dialog.getByLabel("Name").fill("Copy Of JEE");
-    await dialog.getByLabel("Code").fill("JEE-2Y");
+    await dialog.getByLabel("Name").fill("Copy Of Java");
+    await dialog.getByLabel("Code").fill("JFS");
     await dialog.getByLabel("Duration (months)").fill("6");
     await dialog.getByLabel("Fee before GST (₹)").fill("1000");
     await dialog.getByRole("button", { name: "Save course" }).click();
@@ -210,7 +210,7 @@ test.describe("courses and batches", () => {
   test("a counsellor can look at courses but not change them", async ({ page }) => {
     await signIn(page, "counsellor");
     await page.goto("/courses", { waitUntil: "networkidle" });
-    await expect(page.getByRole("region", { name: /JEE Main \+ Advanced \(2-Year\)/ })).toBeVisible();
+    await expect(page.getByRole("region", { name: /Java Full Stack Development/ })).toBeVisible();
     await expect(page.getByRole("button", { name: "New course" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: /^Edit / })).toHaveCount(0);
   });
@@ -243,7 +243,7 @@ test.describe("admissions", () => {
 
   test("the batch list follows the chosen course", async ({ page }) => {
     const student = await makeLead("Admission Batch Carp");
-    const [first, second] = await Promise.all([course("FND-10"), course("BRD-12")]);
+    const [first, second] = await Promise.all([course("DA"), course("DM")]);
     await signIn(page, "counsellor");
     await page.goto(tab(student.id, "admission"), { waitUntil: "networkidle" });
     await page.getByRole("button", { name: "Create admission" }).click();

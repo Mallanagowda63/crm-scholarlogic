@@ -244,7 +244,7 @@ test.describe("reports", () => {
     const to = india(new Date());
     const from = india(new Date(Date.now() - 400 * DAY));
     const period = { gte: startOfKey(from), lt: new Date(startOfKey(to).getTime() + DAY) };
-    const course = await db.course.findUniqueOrThrow({ where: { code: "JEE-1Y" } });
+    const course = await db.course.findUniqueOrThrow({ where: { code: "PFS" } });
     const where = { deletedAt: null, paidAt: period, feePlan: { courseId: course.id, student: { deletedAt: null } } };
     const sum = await db.payment.aggregate({ where, _sum: { amount: true } });
     expect(sum._sum.amount).toBeGreaterThan(0);

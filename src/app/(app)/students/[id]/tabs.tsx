@@ -30,7 +30,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDateTime, formatRupees, formatShortDate, formatTime } from "@/lib/format";
-import { BOARD_LABELS } from "@/lib/leads";
+import { MODE_LABELS } from "@/lib/leads";
 import { formatPhone } from "@/lib/phone";
 import { ACTIVITY_PAGE_SIZE } from "@/lib/students";
 import { cn } from "@/lib/utils";
@@ -143,6 +143,8 @@ export async function OverviewTab({ profile, canEdit }: { profile: Profile; canE
             ["Alternate phone", profile.alternatePhone && formatPhone(profile.alternatePhone)],
             ["Email", profile.email],
             ["City", profile.city],
+            ["Address", profile.address],
+            ["Date of birth", profile.dateOfBirth && formatShortDate(profile.dateOfBirth)],
             ["Parent", profile.parentName],
             ["Parent's phone", profile.parentPhone && formatPhone(profile.parentPhone)],
           ]}
@@ -153,8 +155,8 @@ export async function OverviewTab({ profile, canEdit }: { profile: Profile; canE
         <Details
           items={[
             ["Course of interest", profile.courseInterest?.name],
-            ["Target exam", profile.targetExam?.name],
-            ["Current class", profile.currentClass],
+            ["Mode", profile.preferredMode && MODE_LABELS[profile.preferredMode]],
+            ["Joining date", profile.joiningDate && formatShortDate(profile.joiningDate)],
             ["Source", profile.source?.name],
             ["Budget", profile.budget !== null && formatRupees(profile.budget)],
             ["Preferred intake", profile.preferredIntake],
@@ -319,13 +321,15 @@ export async function AcademicsTab({ profile, canEdit }: { profile: Profile; can
   const records = await getAcademicRecords(profile.id);
   return (
     <div className="grid gap-4 lg:grid-cols-[20rem_1fr]">
-      <Panel title="Current studies">
+      <Panel title="Education">
         <Details
           items={[
-            ["Class", profile.currentClass],
-            ["Board", profile.board && BOARD_LABELS[profile.board]],
-            ["School", profile.schoolName],
-            ["Target exam", profile.targetExam?.name],
+            ["College & university", profile.college],
+            ["Degree", [profile.degree, profile.degreeStream].filter(Boolean).join(" · ")],
+            ["Degree % or CGPA", profile.degreeScore],
+            ["Pass-out year", profile.passOutYear],
+            ["10th %", profile.tenthScore],
+            ["12th %", profile.twelfthScore],
           ]}
         />
       </Panel>
@@ -375,7 +379,7 @@ export async function DocumentsTab({ studentId, canEdit }: { studentId: string; 
           <EmptyState
             icon={FileText}
             title="No documents yet"
-            description="Upload report cards, ID proofs and other documents here."
+            description="Upload marks cards, ID proofs and other documents here."
             className="py-8"
           />
         </Card>

@@ -110,7 +110,7 @@ export function LoginForm({
       {demoAccounts && (
         <div className="mt-6 rounded-xl border border-dashed p-3">
           <p className="mb-2 text-xs text-muted-foreground">
-            Development only. Choose a demo account to fill in the form:
+            Demo accounts for trying ScholarLogic. Choose one to fill in the form:
           </p>
           <div className="flex flex-wrap gap-1.5">
             {demoAccounts.users.map(({ email, role }) => (

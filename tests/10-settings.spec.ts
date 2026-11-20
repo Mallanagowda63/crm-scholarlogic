@@ -317,7 +317,6 @@ test.describe("pipeline stages", () => {
 test.describe("lists", () => {
   for (const { sectionName, label, field } of [
     { sectionName: "sources", label: "Add a source", field: "Filter by source" },
-    { sectionName: "exams", label: "Add a target exam", field: "Target exam" },
   ]) {
     test(`${sectionName} can be added, renamed and hidden, and forms follow`, async ({ page }) => {
       const name = unique(sectionName).slice(0, 40);
@@ -340,7 +339,6 @@ test.describe("lists", () => {
 
       const openForm = async () => {
         await page.goto("/leads", { waitUntil: "networkidle" });
-        if (field === "Target exam") await page.getByRole("button", { name: "New lead" }).click();
         return page.getByLabel(field, { exact: true }).locator("option", { hasText: renamed });
       };
       await expect(await openForm()).toHaveCount(1);
@@ -548,7 +546,7 @@ test.describe("templates and messages", () => {
   });
 
   test("a template fills in for the person, opens WhatsApp and logs it", async ({ page }) => {
-    const course = await db.course.findUniqueOrThrow({ where: { code: "FND-10" } });
+    const course = await db.course.findUniqueOrThrow({ where: { code: "DA" } });
     const student = await db.student.create({
       data: {
         name: "Template Fill Sparrow",
@@ -578,7 +576,7 @@ test.describe("templates and messages", () => {
     await dialog.getByLabel("Template").selectOption({ label: "Fee reminder (WhatsApp)" });
 
     const body = dialog.locator("#message-body");
-    await expect(body).toHaveValue(/Hi Template Fill Sparrow, your Class 10 Foundation fee instalment is due on 20 Apr 2027/);
+    await expect(body).toHaveValue(/Hi Template Fill Sparrow, your Data Analytics & Power BI Mastery fee instalment is due on 20 Apr 2027/);
 
     const link = dialog.getByRole("link", { name: "Open WhatsApp" });
     expect(await link.getAttribute("href")).toContain(`https://wa.me/${student.phone.slice(1)}?text=Hi%20Template`);

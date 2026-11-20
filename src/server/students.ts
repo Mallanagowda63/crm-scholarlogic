@@ -24,7 +24,6 @@ export async function getProfile(user: CurrentUser, id: string) {
       stage: { select: { id: true, name: true, color: true, type: true } },
       source: { select: { name: true } },
       courseInterest: { select: { name: true } },
-      targetExam: { select: { name: true } },
       assignedTo: { select: { id: true, name: true } },
     },
   });
@@ -56,7 +55,8 @@ export async function listStudents(
       id: true,
       name: true,
       phone: true,
-      currentClass: true,
+      degree: true,
+      degreeStream: true,
       courseInterest: { select: { name: true } },
       assignedTo: { select: { name: true } },
       enrollments: {

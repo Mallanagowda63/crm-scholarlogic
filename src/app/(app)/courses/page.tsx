@@ -72,7 +72,7 @@ export default async function CoursesPage() {
                     </h2>
                     <p className="mt-0.5 text-sm text-muted-foreground">
                       {course.code} · {formatRupees(course.fee)} + {course.gstRateBps / 100}% GST · {course.durationMonths}{" "}
-                      {course.durationMonths === 1 ? "month" : "months"} · {seats.filled} of {seats.capacity} seats filled
+                      {course.durationMonths === 1 ? "month" : "months"} · {course.batches.length === 0 ? "No batches yet" : `${seats.filled} of ${seats.capacity} seats filled`}
                     </p>
                   </div>
                   {canManage && (

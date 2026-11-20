@@ -1,0 +1,35 @@
+# Render Blueprint for a test copy: New → Blueprint, then pick this repository.
+# Free plans sleep when idle, and the free database expires after 30 days.
+databases:
+  - name: scholarlogic-db
+    databaseName: scholarlogic
+    user: scholarlogic
+    plan: free
+    region: singapore
+
+services:
+  - type: web
+    name: scholarlogic-crm
+    runtime: node
+    plan: free
+    region: singapore
+    branch: phase-9
+    # Tailwind and Prisma's CLI are dev dependencies, and both are needed.
+    buildCommand: npm ci --include=dev && npm run build
+    # Free plans have no pre-deploy step, so migrations run on start.
+    startCommand: npx prisma migrate deploy && npm start
+    healthCheckPath: /login
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: scholarlogic-db
+          property: connectionString
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: AUTH_TRUST_HOST
+        value: "true"
+      # Test copy only: anyone who opens the site can sign in as admin.
+      - key: SHOW_DEMO_ACCOUNTS
+        value: "true"

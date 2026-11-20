@@ -27,7 +27,7 @@ const THIS_YEAR = new Date().getFullYear();
 
 export const academicSchema = z.object({
   qualification: z.string().trim().min(1, "Enter the qualification").max(80, "Must be 80 characters or fewer"),
-  institution: z.string().trim().min(1, "Enter the school or institution").max(160, "Must be 160 characters or fewer"),
+  institution: z.string().trim().min(1, "Enter the college or institution").max(160, "Must be 160 characters or fewer"),
   year: z.string().transform((value, context) => {
     const year = Number(value.trim());
     if (!Number.isInteger(year) || year < 1990 || year > THIS_YEAR + 1) {

@@ -16,7 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatShortDate } from "@/lib/format";
-import { leadsQuery, PAGE_SIZE, type LeadFilters } from "@/lib/leads";
+import { degreeLine, leadsQuery, PAGE_SIZE, type LeadFilters } from "@/lib/leads";
 import { formatPhone } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 import { assignLeads } from "@/server/actions/leads";
@@ -114,7 +114,7 @@ export function LeadsTable({
         cell: ({ row: { original: lead } }) => (
           <div className="max-w-52">
             <p className="truncate">{lead.courseInterest?.name ?? "—"}</p>
-            {lead.currentClass && <p className="text-xs text-muted-foreground">{lead.currentClass}</p>}
+            {degreeLine(lead) && <p className="text-xs text-muted-foreground">{degreeLine(lead)}</p>}
           </div>
         ),
         meta: { className: "hidden lg:table-cell" },

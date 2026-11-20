@@ -70,11 +70,18 @@ test.describe("adding leads", () => {
     await page.getByLabel("City").fill("Mysuru");
     await page.getByLabel("Parent's name").fill("Field Parent");
     await page.getByLabel("Parent's phone").fill(`+91 ${newPhone()}`);
-    await page.getByLabel("Current class").selectOption("11th");
-    await page.getByLabel("Board").selectOption("ICSE");
-    await page.getByLabel("School").fill("Test School");
-    await page.getByLabel("Target exam").selectOption({ label: "JEE" });
-    await page.getByLabel("Course of interest").selectOption({ label: "JEE Main + Advanced (2-Year)" });
+    await page.getByLabel("Date of birth").fill("2003-05-14");
+    await page.getByLabel("Address").fill("12, 4th Cross, Jayanagar");
+    await page.getByLabel("College & university").fill("Test College, VTU");
+    await page.getByLabel("Degree", { exact: true }).fill("B.E");
+    await page.getByLabel("Stream").fill("CSE");
+    await page.getByLabel("Degree % or CGPA").fill("7.85");
+    await page.getByLabel("Pass-out year").fill("2025");
+    await page.getByLabel("10th %").fill("91%");
+    await page.getByLabel("12th %").fill("84.5");
+    await page.getByLabel("Course of interest").selectOption({ label: "Java Full Stack Development" });
+    await page.getByLabel("Mode", { exact: true }).selectOption("Online");
+    await page.getByLabel("Joining date").fill("2026-12-01");
     await page.getByLabel("Source", { exact: true }).selectOption({ label: "Referral" });
     await page.getByLabel("Budget (₹)").fill("1,50,000");
     await page.getByLabel("Preferred intake").fill("June 2027");
@@ -84,13 +91,24 @@ test.describe("adding leads", () => {
 
     const saved = await db.student.findFirstOrThrow({
       where: { phone: stored(phone) },
-      include: { stage: true, targetExam: true, source: true, activities: true },
+      include: { stage: true, source: true, activities: true },
     });
     expect(saved.email).toBe("field.test@example.com");
     expect(saved.budget).toBe(150000 * 100);
-    expect(saved.board).toBe("ICSE");
     expect(saved.stage.name).toBe("New");
-    expect(saved.targetExam?.name).toBe("JEE");
+    expect(saved).toMatchObject({
+      address: "12, 4th Cross, Jayanagar",
+      college: "Test College, VTU",
+      degree: "B.E",
+      degreeStream: "CSE",
+      degreeScore: "7.85",
+      passOutYear: 2025,
+      tenthScore: "91",
+      twelfthScore: "84.5",
+      preferredMode: "ONLINE",
+    });
+    expect(saved.dateOfBirth?.toISOString().slice(0, 10)).toBe("2003-05-14");
+    expect(saved.joiningDate?.toISOString().slice(0, 10)).toBe("2026-12-01");
     expect(saved.source?.name).toBe("Referral");
     expect(saved.activities.map((activity) => activity.body)).toEqual(["Called from the seminar."]);
     expect(await db.auditLog.count({ where: { entityId: saved.id, action: "lead.created" } })).toBe(1);
@@ -459,7 +477,7 @@ test.describe("the Kanban board", () => {
     await expectToast(page, "Enrol Target Flamingo needs an admission and a fee plan before enrolling.");
     expect((await lead(phone)).stage.type).toBe("OPEN");
 
-    const course = await db.course.findUniqueOrThrow({ where: { code: "KCET-CR" }, include: { batches: true } });
+    const course = await db.course.findUniqueOrThrow({ where: { code: "AWS" }, include: { batches: true } });
     const { id: studentId } = await lead(phone);
     const plan = await db.feePlan.create({ data: { studentId, courseId: course.id, totalAmount: course.fee, gstRateBps: course.gstRateBps } });
     await db.admission.create({
@@ -513,14 +531,15 @@ test.describe("CSV", () => {
     const existing = await makeLead("Already Here");
     const [a, b, c] = [newPhone(), newPhone(), newPhone()];
     const csv = [
-      "Name,Mobile,Email,Class,Board,Target Exam,Course,Source,Budget,Notes",
-      `Import One,${a},one@example.com,11th,CBSE,JEE,JEE-2Y,Website,"1,50,000",Spoke at the fair`,
-      `Import Two,${b},,12th,State board,neet,NEET UG (1-Year),referral,,`,
-      `Import Three,${c},,,,,,,,`,
-      `Duplicate Row,${existing},,,,,,,,`,
-      `Repeat In File,${a},,,,,,,,`,
-      `Bad Phone,12345,,,,,,,,`,
-      `Bad Course,${newPhone()},,,,,No Such Course,,,`,
+      // Column names as the LMS Google Form sheet has them.
+      "Full Name,Mobile,Email,College & University,Degree,Degree Stream,Degree Percentage / CGPA,Pass-out Year,10th Percentage,12th %,Course,Preferred Mode,Source,Budget,Notes",
+      `Import One,${a},one@example.com,PES University,B.Tech,IT,8.2,2025,88,79,JFS,Online,Website,"1,50,000",Spoke at the fair`,
+      `Import Two,${b},,,BCA,,,2026,,,Python Full Stack Development,offline,referral,,`,
+      `Import Three,${c},,,,,,,,,,,,,`,
+      `Duplicate Row,${existing},,,,,,,,,,,,,`,
+      `Repeat In File,${a},,,,,,,,,,,,,`,
+      `Bad Phone,12345,,,,,,,,,,,,,`,
+      `Bad Course,${newPhone()},,,,,,,,,No Such Course,,,,`,
     ].join("\n");
     const before = await db.student.count();
 
@@ -543,16 +562,26 @@ test.describe("CSV", () => {
 
     const one = await db.student.findFirstOrThrow({
       where: { phone: stored(a), name: "Import One" },
-      include: { stage: true, targetExam: true, courseInterest: true, activities: true },
+      include: { stage: true, courseInterest: true, activities: true },
     });
     expect(one.stage.name).toBe("New");
     expect(one.budget).toBe(150000 * 100);
-    expect(one.courseInterest?.code).toBe("JEE-2Y");
+    expect(one.courseInterest?.code).toBe("JFS");
+    expect(one).toMatchObject({
+      college: "PES University",
+      degree: "B.Tech",
+      degreeStream: "IT",
+      degreeScore: "8.2",
+      passOutYear: 2025,
+      tenthScore: "88",
+      twelfthScore: "79",
+      preferredMode: "ONLINE",
+    });
     expect(one.activities.map((activity) => activity.body)).toEqual(["Spoke at the fair"]);
-    const two = await db.student.findFirstOrThrow({ where: { phone: stored(b) }, include: { source: true, targetExam: true } });
-    expect(two.board).toBe("STATE");
+    const two = await db.student.findFirstOrThrow({ where: { phone: stored(b) }, include: { source: true, courseInterest: true } });
     expect(two.source?.name).toBe("Referral");
-    expect(two.targetExam?.name).toBe("NEET");
+    expect(two.courseInterest?.code).toBe("PFS");
+    expect(two.preferredMode).toBe("OFFLINE");
 
     const owners = await db.student.findMany({ where: { name: { startsWith: "Import " }, phone: { in: [a, b, c].map(stored) } } });
     expect(new Set(owners.map((owner) => owner.assignedToId)).size).toBe(3);

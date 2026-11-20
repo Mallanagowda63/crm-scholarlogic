@@ -350,7 +350,7 @@ export function AcademicRecordButton({ studentId, record }: { studentId: string;
             <FieldError id="academic-qualification-error" message={formState.errors.qualification?.message} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="academic-institution">School or institution</Label>
+            <Label htmlFor="academic-institution">College or institution</Label>
             <Input id="academic-institution" className="h-10" {...register("institution")} />
             <FieldError id="academic-institution-error" message={formState.errors.institution?.message} />
           </div>

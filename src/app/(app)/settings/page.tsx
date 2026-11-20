@@ -19,13 +19,12 @@ const SECTIONS = [
   { id: "users", label: "Users & roles" },
   { id: "pipeline", label: "Pipeline stages" },
   { id: "sources", label: "Lead sources" },
-  { id: "exams", label: "Target exams" },
   { id: "branches", label: "Branches" },
   { id: "organisation", label: "Organisation & branding" },
 ] as const;
 
 const querySchema = z.object({
-  section: z.enum(["users", "pipeline", "sources", "exams", "branches", "organisation"]).catch("users"),
+  section: z.enum(["users", "pipeline", "sources", "branches", "organisation"]).catch("users"),
 });
 
 export default async function SettingsPage({
@@ -95,16 +94,6 @@ export default async function SettingsPage({
           singular="source"
           items={await db.leadSource.findMany({
             orderBy: [{ isActive: "desc" }, { name: "asc" }],
-            select: { id: true, name: true, isActive: true },
-          })}
-        />
-      )}
-      {section === "exams" && (
-        <ListManager
-          kind="exam"
-          singular="target exam"
-          items={await db.targetExam.findMany({
-            orderBy: [{ isActive: "desc" }, { position: "asc" }],
             select: { id: true, name: true, isActive: true },
           })}
         />
