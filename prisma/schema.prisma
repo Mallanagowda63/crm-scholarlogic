@@ -241,6 +241,8 @@ model LeadSource {
   id       String  @id @default(cuid())
   name     String  @unique
   isActive Boolean @default(true)
+  /// Set on sources the app picks itself, such as "phone_call" for Quick add from call, so they can be renamed safely.
+  key      String? @unique
 
   students Student[]
 }

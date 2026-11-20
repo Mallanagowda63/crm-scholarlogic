@@ -155,3 +155,15 @@ export const EMPTY_LEAD: LeadFormValues = {
   notes: "",
   assignedToId: "",
 };
+
+/** Quick add from call. The name is only needed when the number is new, so the server checks it then. */
+export const callEnquirySchema = z.object({
+  phone: requiredPhone,
+  name: z.string().trim().max(120, "Must be 120 characters or fewer"),
+  courseInterestId: optionalId,
+  summary: optionalText(2000),
+});
+
+export type CallEnquiryFormValues = z.input<typeof callEnquirySchema>;
+
+export const EMPTY_CALL_ENQUIRY: CallEnquiryFormValues = { phone: "", name: "", courseInterestId: "", summary: "" };

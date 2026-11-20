@@ -15,6 +15,9 @@ export const LOST_REASONS = [
   "Didn't attend the demo class",
 ] as const;
 
+/** The key of the source that Quick add from call gives new leads. Admins can rename it. */
+export const PHONE_CALL_SOURCE_KEY = "phone_call";
+
 export const PAGE_SIZE = 25;
 export const BOARD_COLUMN_LIMIT = 50;
 export const MAX_BULK = 200;

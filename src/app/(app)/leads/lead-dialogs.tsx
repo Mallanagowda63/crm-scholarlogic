@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 
+import { CallEnquiryDialog } from "@/app/(app)/leads/call-enquiry-dialog";
 import { LeadSheet } from "@/app/(app)/leads/lead-sheet";
 import { LostReasonDialog } from "@/app/(app)/leads/lost-reason-dialog";
 import type { LeadOptions } from "@/server/leads";
@@ -11,6 +12,7 @@ type LeadWorkspace = {
   canManage: boolean;
   openCreate: () => void;
   openEdit: (id: string) => void;
+  openCallEnquiry: () => void;
   /** Resolves to the chosen reason, or null if the person cancelled. */
   askLostReason: (subject: string) => Promise<string | null>;
 };
@@ -34,20 +36,28 @@ export function LeadDialogsProvider({
   children: React.ReactNode;
 }) {
   const [sheet, setSheet] = useState<{ open: boolean; leadId: string | null }>({ open: false, leadId: null });
+  const [callOpen, setCallOpen] = useState(false);
+  const [callKey, setCallKey] = useState(0);
   const [lostRequest, setLostRequest] = useState<{ subject: string; resolve: (reason: string | null) => void } | null>(
     null,
   );
 
   const openCreate = useCallback(() => setSheet({ open: true, leadId: null }), []);
   const openEdit = useCallback((leadId: string) => setSheet({ open: true, leadId }), []);
+  const openCallEnquiry = useCallback(() => {
+    // A new key gives each call a blank form.
+    setCallKey((key) => key + 1);
+    setCallOpen(true);
+  }, []);
+  const closeCallEnquiry = useCallback(() => setCallOpen(false), []);
   const closeSheet = useCallback(() => setSheet((current) => ({ ...current, open: false })), []);
   const askLostReason = useCallback(
     (subject: string) => new Promise<string | null>((resolve) => setLostRequest({ subject, resolve })),
     [],
   );
   const workspace = useMemo(
-    () => ({ options, canManage, openCreate, openEdit, askLostReason }),
-    [options, canManage, openCreate, openEdit, askLostReason],
+    () => ({ options, canManage, openCreate, openEdit, openCallEnquiry, askLostReason }),
+    [options, canManage, openCreate, openEdit, openCallEnquiry, askLostReason],
   );
 
   return (
@@ -61,6 +71,7 @@ export function LeadDialogsProvider({
         canManage={canManage}
         onClose={closeSheet}
       />
+      <CallEnquiryDialog key={callKey} open={callOpen} options={options} onClose={closeCallEnquiry} />
       <LostReasonDialog
         subject={lostRequest?.subject ?? null}
         onResult={(reason) => {

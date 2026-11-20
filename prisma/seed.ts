@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { addDays, addHours, subDays, subHours } from "date-fns";
 
 import { DEMO_PASSWORD, DEMO_USERS } from "../src/lib/demo-users";
+import { PHONE_CALL_SOURCE_KEY } from "../src/lib/leads";
 
 const db = new PrismaClient();
 
@@ -107,7 +108,17 @@ const ADMITTED = 5;
 const ENROLLED = 6;
 const LOST = 7;
 
-const SOURCES = ["Website", "Google Form", "Walk-in", "Instagram", "LinkedIn", "Google Ads", "Referral", "College Drive"];
+const SOURCES = [
+  "Website",
+  "Google Form",
+  "Walk-in",
+  "Instagram",
+  "LinkedIn",
+  "Google Ads",
+  "Referral",
+  "College Drive",
+  "Phone Call",
+];
 
 // The courses published on the ScholarLogic LMS. Fees are sample figures.
 const COURSES = [
@@ -199,7 +210,11 @@ async function main() {
       db.pipelineStage.create({ data: { name, color, type, position, key: STAGE_KEYS[name] ?? null } }),
     ),
   );
-  const sources = await Promise.all(SOURCES.map((name) => db.leadSource.create({ data: { name } })));
+  const sources = await Promise.all(
+    SOURCES.map((name) =>
+      db.leadSource.create({ data: { name, key: name === "Phone Call" ? PHONE_CALL_SOURCE_KEY : null } }),
+    ),
+  );
   const branches = withSampleBatches
     ? await Promise.all(
         [

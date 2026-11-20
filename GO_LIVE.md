@@ -2,7 +2,7 @@
 
 Everything that must be done before ScholarLogic goes into production. This is updated at the end of every phase.
 
-*Last updated: Phase 8, the final build phase.*
+*Last updated: Phase 10, call enquiries.*
 
 ## Security upgrades
 
@@ -37,6 +37,12 @@ Everything that must be done before ScholarLogic goes into production. This is u
 
 - [ ] Decide whether messages should send automatically. Today WhatsApp and email open on the person's own device with the message ready to review, because no paid WhatsApp or email service is connected.
 - [ ] Decide whether reminders should also go out by email, SMS or WhatsApp. Today they only appear in the notification bell, while someone has the app open or the next time they open it.
+
+## Phone enquiries
+
+- [ ] Phone calls aren't captured automatically. Counsellors add callers with **Call enquiry** on the Leads page. Calls on a business number can only arrive by themselves through a cloud telephony service (such as Exotel or MyOperator) or a call-log app on an Android phone, which hasn't been built.
+- [ ] Decide how admins' call enquiries are assigned. They go to counsellors in turn, like other new leads, and the counsellor gets a notification.
+- [ ] Keep the **Phone Call** lead source active in Settings. It can be renamed, but deactivating it hides it from the lead filters while call enquiries still use it.
 
 ## Uploaded documents
 
