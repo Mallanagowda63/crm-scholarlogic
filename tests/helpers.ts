@@ -70,3 +70,14 @@ export async function dragTo(page: Page, from: { x: number; y: number }, to: { x
 }
 
 export type SignedIn = { context: BrowserContext; page: Page };
+
+/**
+ * Clicks a link and waits for the address to change. A click in the moment React
+ * takes over a freshly loaded page can be dropped, so it tries again if nothing happened.
+ */
+export async function clickToNavigate(page: Page, link: import("@playwright/test").Locator, url: RegExp) {
+  await expect(async () => {
+    if (!url.test(page.url())) await link.click();
+    await expect(page).toHaveURL(url, { timeout: 5_000 });
+  }).toPass({ timeout: 30_000 });
+}

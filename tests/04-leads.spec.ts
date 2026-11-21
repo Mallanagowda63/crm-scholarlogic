@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
-import { db, dragTo, emailOf, expectToast, newSignedInContext, noHorizontalScroll, signIn, watchForErrors } from "./helpers";
+import { clickToNavigate, db, dragTo, emailOf, expectToast, newSignedInContext, noHorizontalScroll, signIn, watchForErrors } from "./helpers";
 
 let lastStamp = 0;
 /**
@@ -272,8 +272,7 @@ test.describe("the table", () => {
     await page.goto("/leads", { waitUntil: "networkidle" });
     const names = () => page.locator("tbody tr td:nth-child(2) a:first-child").allTextContents();
 
-    await page.getByRole("link", { name: "Name" }).click();
-    await expect(page).toHaveURL(/sort=name/);
+    await clickToNavigate(page, page.getByRole("link", { name: "Name" }), /sort=name/);
     await expect(page.getByRole("columnheader", { name: "Name" })).toHaveAttribute("aria-sort", "ascending");
     const ascending = await names();
     expect(ascending).toEqual([...ascending].sort((a, b) => a.localeCompare(b, "en", { sensitivity: "base" })));

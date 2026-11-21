@@ -95,6 +95,12 @@ Admins see two extra panels at the top of the dashboard:
 
 Walk-ins and leads are counted by source, so the Walk-in, Instagram, Meta Ads and Google Ads sources can be renamed safely. Numbers the CRM can't know, such as Instagram posts, planned candidates and years before the CRM, come from the `MonthlyFigure` table. A number there replaces the CRM's count for that month. The seed fills the last three years with sample figures, marked with *.
 
+## Daily report
+
+Admins have a **Daily report** page showing, for any day, what each counsellor did: follow-ups done and missed, calls, WhatsApp messages, emails, notes, stage moves and leads added, with each counsellor's timeline. It's built from what counsellors already log, so they don't do anything extra.
+
+From 7 pm India time, the next time an admin has the app open, they get one notification summarising the day, linking to the report. Counsellors, accounts and viewers can't open the page, don't see it in the menu, and aren't notified.
+
 ## Messages
 
 Templates can use `{{name}}`, `{{course}}` and `{{due_date}}`. The Message button on a profile fills them in for that person, then opens WhatsApp or the email app with the message ready to review. It's logged on the timeline when opened. No message is sent automatically, as no paid WhatsApp or email service is connected.

@@ -680,7 +680,7 @@ test.describe("access", () => {
 
 test.describe("every page", () => {
   const PAGES: [string, string[]][] = [
-    ["admin", ["/dashboard", "/reports", "/leads", "/leads?view=board", "/students", "/admissions", "/courses", "/tasks", "/tasks?view=calendar", "/communication", "/communication?view=log", "/fees", "/settings", "/settings?section=pipeline", "/settings?section=organisation"]],
+    ["admin", ["/dashboard", "/reports", "/daily-report", "/leads", "/leads?view=board", "/students", "/admissions", "/courses", "/tasks", "/tasks?view=calendar", "/communication", "/communication?view=log", "/fees", "/settings", "/settings?section=pipeline", "/settings?section=organisation"]],
     ["counsellor", ["/dashboard", "/leads", "/students", "/admissions", "/courses", "/tasks", "/communication"]],
     ["accounts", ["/dashboard", "/students", "/fees"]],
     ["viewer", ["/dashboard", "/reports"]],

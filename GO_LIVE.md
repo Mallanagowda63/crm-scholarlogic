@@ -2,7 +2,7 @@
 
 Everything that must be done before ScholarLogic goes into production. This is updated at the end of every phase.
 
-*Last updated: Phase 11, admin overview.*
+*Last updated: Phase 12, daily report.*
 
 ## Security upgrades
 
@@ -49,6 +49,12 @@ Everything that must be done before ScholarLogic goes into production. This is u
 - [ ] Replace the **sample monthly figures** with Theta's real ones for past years: admissions, walk-ins, planned candidates, Instagram posts, and Instagram, Meta ads and Google ads leads. They're in the `MonthlyFigure` table, marked `isSample`. Production starts without them, as it isn't seeded.
 - [ ] Decide who enters **Instagram posts and planned candidates** each month. There's no screen for it yet.
 - [ ] Ask counsellors to mark junk enquiries as Lost with the reason **Invalid enquiry**, as that's what the dashboard counts.
+
+## Daily report
+
+- [ ] Decide whether the end-of-day report should also go by **email or WhatsApp**. Today it's a notification inside the app, and arrives only when an admin opens the app after 7 pm. If no admin opens it that evening, the next visit brings the most recent finished day only.
+- [ ] Confirm **7 pm** is the right end of the working day (`END_OF_DAY_HOUR` in `src/server/daily-report.ts`).
+- [ ] Tell counsellors to log every call and message and to tick off follow-ups, since the report only shows what's logged. The report itself stays admin-only.
 
 ## Uploaded documents
 

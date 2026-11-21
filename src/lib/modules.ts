@@ -2,6 +2,7 @@ import {
   BarChart3,
   BookOpen,
   CheckSquare,
+  ClipboardList,
   FileText,
   GraduationCap,
   IndianRupee,
@@ -17,6 +18,7 @@ import type { Role } from "@/lib/roles";
 export type ModuleId =
   | "dashboard"
   | "reports"
+  | "dailyReport"
   | "leads"
   | "students"
   | "admissions"
@@ -54,6 +56,16 @@ export const MODULES: readonly ModuleDef[] = [
     description: "Conversion, counsellor performance and revenue by course.",
     section: "Overview",
     roles: ["ADMIN", "VIEWER"],
+  },
+  {
+    id: "dailyReport",
+    label: "Daily report",
+    href: "/daily-report",
+    icon: ClipboardList,
+    // Admins only. Counsellors aren't shown this page or told it exists.
+    description: "What each counsellor did on their follow-ups, day by day.",
+    section: "Overview",
+    roles: ["ADMIN"],
   },
   {
     id: "leads",

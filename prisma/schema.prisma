@@ -116,15 +116,16 @@ model User {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  assignedStudents  Student[]      @relation("StudentAssignee")
-  uploadedDocuments Document[]     @relation("DocumentUploader")
-  verifiedDocuments Document[]     @relation("DocumentVerifier")
+  assignedStudents  Student[]             @relation("StudentAssignee")
+  uploadedDocuments Document[]            @relation("DocumentUploader")
+  verifiedDocuments Document[]            @relation("DocumentVerifier")
   recordedPayments  Payment[]
   createdFeePlans   FeePlan[]
-  assignedTasks     Task[]         @relation("TaskAssignee")
-  createdTasks      Task[]         @relation("TaskCreator")
+  assignedTasks     Task[]                @relation("TaskAssignee")
+  createdTasks      Task[]                @relation("TaskCreator")
   activities        Activity[]
   notifications     Notification[]
+  dailyReports      DailyReportDelivery[]
   auditLogs         AuditLog[]
   demoClasses       DemoClass[]
 
@@ -134,7 +135,7 @@ model User {
 /// One record from first enquiry onward. The UI calls it a lead until the
 /// student reaches a WON stage, then a student.
 model Student {
-  id              String    @id @default(cuid())
+  id              String     @id @default(cuid())
   name            String
   /// E.164 format, such as +919876543210. Not unique because siblings can share a number.
   phone           String
@@ -144,7 +145,7 @@ model Student {
   parentPhone     String?
   city            String?
   address         String?
-  dateOfBirth     DateTime? @db.Date
+  dateOfBirth     DateTime?  @db.Date
   photoUrl        String?
   /// School-coaching fields, kept for older records but no longer shown in forms.
   currentClass    String?
@@ -162,14 +163,14 @@ model Student {
   tenthScore      String?
   twelfthScore    String?
   preferredMode   BatchMode?
-  joiningDate     DateTime? @db.Date
+  joiningDate     DateTime?  @db.Date
   budget          Int?
   preferredIntake String?
   lostReason      String?
   lastContactedAt DateTime?
   nextFollowUpAt  DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
   deletedAt       DateTime?
 
   stageId          String
@@ -615,6 +616,17 @@ model Notification {
   createdAt DateTime  @default(now())
 
   @@index([userId, readAt, createdAt])
+}
+
+/// Marks that an admin has been sent the daily follow-up report for a day, so it's sent once.
+model DailyReportDelivery {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  day       DateTime @db.Date
+  createdAt DateTime @default(now())
+
+  @@unique([userId, day])
 }
 
 // ---------- System ----------

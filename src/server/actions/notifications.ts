@@ -4,8 +4,9 @@ import { z } from "zod";
 
 import { db } from "@/lib/db";
 import { summarisePlan } from "@/lib/fees";
-import { formatDateTime, formatRupees } from "@/lib/format";
+import { formatDateTime, formatKey, formatRupees } from "@/lib/format";
 import { getCurrentUser } from "@/lib/session";
+import { getDailyReport, latestFinishedDay, reportTotals } from "@/server/daily-report";
 
 const MAX_SHOWN = 20;
 const MAX_REMINDERS_PER_CHECK = 50;
@@ -118,12 +119,39 @@ async function deliverOverdueAlerts() {
   }
 }
 
+/**
+ * After 7 pm, an admin's next check-in brings that day's follow-up report.
+ * There's no email service, so it arrives as a notification. Counsellors get nothing.
+ */
+async function deliverDailyReport(userId: string) {
+  const day = latestFinishedDay(new Date());
+  // Claiming the day first means two open tabs can't both deliver it.
+  const claimed = await db.dailyReportDelivery.createMany({
+    data: [{ userId, day: new Date(`${day}T00:00:00.000Z`) }],
+    skipDuplicates: true,
+  });
+  if (claimed.count === 0) return;
+
+  const totals = reportTotals(await getDailyReport(day));
+  await db.notification.create({
+    data: {
+      userId,
+      title: "Daily report",
+      message:
+        `${formatKey(day, { day: "numeric", month: "short" })}: ${totals.followUpsDone} follow-ups done, ` +
+        `${totals.followUpsMissed} missed, ${totals.contacts} calls and messages, ${totals.leadsAdded} leads added.`,
+      link: `/daily-report?date=${day}`,
+    },
+  });
+}
+
 export async function getNotifications(): Promise<NotificationFeed> {
   const user = await getCurrentUser();
   if (!user) return { items: [], unread: 0 };
 
   await deliverDueReminders(user.id);
   if (user.role === "ACCOUNTS") await deliverOverdueAlerts();
+  if (user.role === "ADMIN") await deliverDailyReport(user.id);
 
   const [rows, unread] = await Promise.all([
     db.notification.findMany({
