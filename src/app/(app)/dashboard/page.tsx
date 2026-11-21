@@ -12,6 +12,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { AdminOverview, parseOverviewParams } from "@/app/(app)/dashboard/admin-overview";
 import { PageHeader } from "@/components/shared/page-header";
 import { BarChart, ChartTable } from "@/components/shared/bar-chart";
 import { ChartCard, StatTile } from "@/components/shared/stat-tile";
@@ -34,9 +35,12 @@ import { getPlanSummaries, startOfIndiaMonth } from "@/server/fees";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
-export default async function DashboardPage() {
+type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
+
+export default async function DashboardPage({ searchParams }: Props) {
   const user = await requireModuleAccess("dashboard");
   const now = new Date();
+  const { month, year } = parseOverviewParams(await searchParams, now);
 
   return (
     <>
@@ -45,6 +49,11 @@ export default async function DashboardPage() {
         description={formatLongDate(now)}
         actions={<Badge variant="secondary">{ROLE_LABELS[user.role]}</Badge>}
       />
+      {user.role === "ADMIN" && (
+        <Suspense fallback={<Skeleton role="status" aria-label="Loading month at a glance" className="mb-4 h-96" />}>
+          <AdminOverview month={month} year={year} now={now} />
+        </Suspense>
+      )}
       <Suspense fallback={<DashboardSkeleton />}>
         {user.role === "ACCOUNTS" ? <AccountsDashboard now={now} /> : <LeadsDashboard user={user} now={now} />}
       </Suspense>

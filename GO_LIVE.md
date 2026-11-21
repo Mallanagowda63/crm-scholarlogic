@@ -2,7 +2,7 @@
 
 Everything that must be done before ScholarLogic goes into production. This is updated at the end of every phase.
 
-*Last updated: Phase 10, call enquiries.*
+*Last updated: Phase 11, admin overview.*
 
 ## Security upgrades
 
@@ -43,6 +43,12 @@ Everything that must be done before ScholarLogic goes into production. This is u
 - [ ] Phone calls aren't captured automatically. Counsellors add callers with **Call enquiry** on the Leads page. Calls on a business number can only arrive by themselves through a cloud telephony service (such as Exotel or MyOperator) or a call-log app on an Android phone, which hasn't been built.
 - [ ] Decide how admins' call enquiries are assigned. They go to counsellors in turn, like other new leads, and the counsellor gets a notification.
 - [ ] Keep the **Phone Call** lead source active in Settings. It can be renamed, but deactivating it hides it from the lead filters while call enquiries still use it.
+
+## Admin overview
+
+- [ ] Replace the **sample monthly figures** with Theta's real ones for past years: admissions, walk-ins, planned candidates, Instagram posts, and Instagram, Meta ads and Google ads leads. They're in the `MonthlyFigure` table, marked `isSample`. Production starts without them, as it isn't seeded.
+- [ ] Decide who enters **Instagram posts and planned candidates** each month. There's no screen for it yet.
+- [ ] Ask counsellors to mark junk enquiries as Lost with the reason **Invalid enquiry**, as that's what the dashboard counts.
 
 ## Uploaded documents
 

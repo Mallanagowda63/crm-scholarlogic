@@ -12,7 +12,7 @@ export function formatValue(value: number, format: ValueFormat) {
   return value.toLocaleString("en-IN");
 }
 
-/** Shortened for axis labels, where ₹12,50,000 would crowd its neighbours. */
+/** Shortened axis labels, where ₹12,50,000 would crowd its neighbours. */
 function formatAxis(value: number, format: ValueFormat) {
   if (format === "percent") return `${value}%`;
   if (format !== "rupees") return value.toLocaleString("en-IN");

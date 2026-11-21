@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { addDays, addHours, subDays, subHours } from "date-fns";
 
 import { DEMO_PASSWORD, DEMO_USERS } from "../src/lib/demo-users";
-import { PHONE_CALL_SOURCE_KEY } from "../src/lib/leads";
+import { SOURCE_KEYS } from "../src/lib/leads";
 
 const db = new PrismaClient();
 
@@ -58,6 +58,7 @@ const DEGREES = [
 const STREETS = ["1st Main Road", "4th Cross", "80 Feet Road", "Church Street", "17th Main", "2nd Stage"];
 const MODES: readonly BatchMode[] = ["OFFLINE", "OFFLINE", "ONLINE", "HYBRID"];
 const LOST_REASONS = [
+  "Invalid enquiry",
   "Fees over budget",
   "Joined another institute",
   "Centre too far from home",
@@ -115,6 +116,7 @@ const SOURCES = [
   "Instagram",
   "LinkedIn",
   "Google Ads",
+  "Meta Ads",
   "Referral",
   "College Drive",
   "Phone Call",
@@ -179,7 +181,7 @@ async function main() {
     "AuditLog", "Notification", "MessageTemplate", "Activity", "Task", "Receipt", "Payment",
     "Instalment", "FeePlan", "ChecklistItem", "Document", "Admission", "DemoClass", "Enrollment",
     "Batch", "Branch", "AcademicRecord", "Student", "Course", "TargetExam", "LeadSource",
-    "PipelineStage", "OrgSettings", "LoginAttempt", "User"
+    "PipelineStage", "OrgSettings", "LoginAttempt", "MonthlyFigure", "User"
     CASCADE`;
 
   // ---------- Users ----------
@@ -212,7 +214,7 @@ async function main() {
   );
   const sources = await Promise.all(
     SOURCES.map((name) =>
-      db.leadSource.create({ data: { name, key: name === "Phone Call" ? PHONE_CALL_SOURCE_KEY : null } }),
+      db.leadSource.create({ data: { name, key: SOURCE_KEYS[name as keyof typeof SOURCE_KEYS] ?? null } }),
     ),
   );
   const branches = withSampleBatches
@@ -710,6 +712,37 @@ async function main() {
       createdAt: subDays(now, 200),
     })),
   });
+
+  // ---------- Sample monthly figures ----------
+  // Stand-ins for the three years before the CRM, until Theta enters the real numbers.
+  // This year only gets the planned target and Instagram posts, as the CRM counts the rest.
+  const thisYear = Number(now.toISOString().slice(0, 4));
+  const figures = [];
+  for (let year = thisYear - 3; year <= thisYear; year++) {
+    for (let month = 1; month <= 12; month++) {
+      // Admissions peak after college results, from June to August.
+      const season = month >= 6 && month <= 8 ? 1.6 : month >= 12 || month <= 2 ? 1.2 : 1;
+      const growth = 1 + (year - (thisYear - 3)) * 0.15;
+      const planned = Math.round(int(18, 26) * season * growth);
+      figures.push(
+        year === thisYear
+          ? { year, month, plannedCandidates: planned, instagramPosts: int(8, 20), isSample: true }
+          : {
+              year,
+              month,
+              admissions: Math.round(planned * (0.7 + random() * 0.4)),
+              walkIns: Math.round(int(10, 22) * season * growth),
+              plannedCandidates: planned,
+              instagramPosts: int(6, 18),
+              instagramLeads: Math.round(int(15, 40) * growth),
+              metaLeads: year === thisYear - 3 ? 0 : Math.round(int(20, 55) * season * growth),
+              googleLeads: Math.round(int(12, 35) * season * growth),
+              isSample: true,
+            },
+      );
+    }
+  }
+  await db.monthlyFigure.createMany({ data: figures });
 
   const [studentCount, demoCount, paymentCount, activityCount, taskCount] = await Promise.all([
     db.student.count(),

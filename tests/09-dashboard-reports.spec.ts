@@ -111,6 +111,8 @@ test.describe("the dashboard", () => {
     await signIn(page, "admin");
     await page.goto("/dashboard", { waitUntil: "networkidle" });
     const chart = page.locator('[data-chart="Monthly admissions"]');
+    // The admin overview sits above the charts, so this one may start below the fold.
+    await chart.scrollIntoViewIfNeeded();
     const box = (await chart.boundingBox())!;
     await page.mouse.move(box.x + box.width - 60, box.y + box.height / 2);
     await expect(chart.locator(".recharts-tooltip-wrapper").getByText(/\d/).first()).toBeVisible();

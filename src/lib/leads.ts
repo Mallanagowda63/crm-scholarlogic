@@ -7,7 +7,11 @@ export function degreeLine(person: { degree: string | null; degreeStream: string
   return [person.degree, person.degreeStream].filter(Boolean).join(" ") || null;
 }
 
+/** Wrong numbers, spam and people not looking for a course. The admin dashboard counts these. */
+export const INVALID_REASON = "Invalid enquiry";
+
 export const LOST_REASONS = [
+  INVALID_REASON,
   "Fees over budget",
   "Joined another institute",
   "Centre too far from home",
@@ -17,6 +21,15 @@ export const LOST_REASONS = [
 
 /** The key of the source that Quick add from call gives new leads. Admins can rename it. */
 export const PHONE_CALL_SOURCE_KEY = "phone_call";
+
+/** Sources the admin dashboard reports on by key, so admins can rename them. */
+export const SOURCE_KEYS = {
+  "Walk-in": "walk_in",
+  Instagram: "instagram",
+  "Meta Ads": "meta_ads",
+  "Google Ads": "google_ads",
+  "Phone Call": PHONE_CALL_SOURCE_KEY,
+} as const;
 
 export const PAGE_SIZE = 25;
 export const BOARD_COLUMN_LIMIT = 50;

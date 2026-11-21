@@ -247,6 +247,28 @@ model LeadSource {
   students Student[]
 }
 
+/// Monthly numbers entered by hand, for months before the CRM was used and for
+/// things it can't see, such as Instagram posts. An empty value means "use the CRM's count".
+model MonthlyFigure {
+  id                String   @id @default(cuid())
+  year              Int
+  /// 1 for January to 12 for December.
+  month             Int
+  admissions        Int?
+  walkIns           Int?
+  plannedCandidates Int?
+  instagramPosts    Int?
+  instagramLeads    Int?
+  metaLeads         Int?
+  googleLeads       Int?
+  /// Made-up figures shown until the real ones are entered.
+  isSample          Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([year, month])
+}
+
 /// The list of exams students prepare for, managed in Settings.
 model TargetExam {
   id       String  @id @default(cuid())

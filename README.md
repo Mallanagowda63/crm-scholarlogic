@@ -86,6 +86,15 @@ Each role gets its own dashboard. Counsellors see only their own numbers, accoun
 
 Admins can rename the Phone Call source in Settings, and call enquiries keep using it.
 
+## Admin overview
+
+Admins see two extra panels at the top of the dashboard:
+
+- **Month at a glance**, for any month: walk-ins (and the year so far), admissions, invalid enquiries (leads marked Lost as "Invalid enquiry"), enquiries still waiting for a first reply, payments due that month, and admissions by course.
+- **Admissions by year**, up to 10 years. Choosing a year shows each month's admissions, walk-ins, planned candidates, Instagram posts, and leads from Instagram, Meta ads and Google ads. Choosing a month shows it on the left.
+
+Walk-ins and leads are counted by source, so the Walk-in, Instagram, Meta Ads and Google Ads sources can be renamed safely. Numbers the CRM can't know, such as Instagram posts, planned candidates and years before the CRM, come from the `MonthlyFigure` table. A number there replaces the CRM's count for that month. The seed fills the last three years with sample figures, marked with *.
+
 ## Messages
 
 Templates can use `{{name}}`, `{{course}}` and `{{due_date}}`. The Message button on a profile fills them in for that person, then opens WhatsApp or the email app with the message ready to review. It's logged on the timeline when opened. No message is sent automatically, as no paid WhatsApp or email service is connected.
