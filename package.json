@@ -16,7 +16,8 @@
     "db:deploy": "prisma migrate deploy",
     "test": "playwright test",
     "test:report": "playwright show-report",
-    "create-admin": "node scripts/create-admin.mjs"
+    "create-admin": "node scripts/create-admin.mjs",
+    "sync-lms": "node scripts/sync-lms.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -31,6 +32,7 @@
     "cn": "^0.5.1",
     "date-fns": "^4.4.0",
     "lucide-react": "^1.66.0",
+    "mongodb": "^6.10.0",
     "next": "15.5.28",
     "next-auth": "^5.0.0-beta.32",
     "next-themes": "^0.4.6",

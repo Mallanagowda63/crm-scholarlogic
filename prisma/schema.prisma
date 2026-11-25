@@ -113,6 +113,8 @@ model User {
   sessionVersion Int       @default(0)
   /// The counsellor assigned longest ago gets the next new lead.
   lastAssignedAt DateTime?
+  /// The ScholarLogic LMS record this row is copied from (scripts/sync-lms.mjs). Empty for rows made in the CRM.
+  lmsId          String?   @unique
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -172,6 +174,8 @@ model Student {
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
   deletedAt       DateTime?
+  /// The ScholarLogic LMS record this row is copied from (scripts/sync-lms.mjs). Empty for rows made in the CRM.
+  lmsId           String?    @unique
 
   stageId          String
   stage            PipelineStage @relation(fields: [stageId], references: [id])
@@ -293,6 +297,8 @@ model Course {
   durationMonths Int
   gstRateBps     Int      @default(1800)
   isActive       Boolean  @default(true)
+  /// The ScholarLogic LMS record this row is copied from (scripts/sync-lms.mjs). Empty for rows made in the CRM.
+  lmsId          String?  @unique
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -329,6 +335,8 @@ model Batch {
   endDate   DateTime?
   capacity  Int
   isActive  Boolean   @default(true)
+  /// The ScholarLogic LMS record this row is copied from (scripts/sync-lms.mjs). Empty for rows made in the CRM.
+  lmsId     String?   @unique
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
