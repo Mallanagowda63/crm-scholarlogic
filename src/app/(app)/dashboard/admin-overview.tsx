@@ -19,6 +19,7 @@ import {
   type MonthKey,
   type YearFigures,
 } from "@/server/admin-overview";
+import { withBase } from "@/lib/base-path";
 
 const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
 
@@ -60,7 +61,7 @@ export async function AdminOverview({ month, year, now }: { month: MonthKey; yea
             <MonthStep href={hasPrevious ? overviewHref(previous, Number(previous.slice(0, 4))) : null} label="Previous month">
               <ChevronLeft aria-hidden />
             </MonthStep>
-            <form action="/dashboard" className="flex items-center gap-1">
+            <form action={withBase("/dashboard")} className="flex items-center gap-1">
               <Input
                 type="month"
                 name="month"

@@ -1,5 +1,6 @@
 import { cache } from "react";
 
+import { withBase } from "@/lib/base-path";
 import { db } from "@/lib/db";
 
 export const getBranding = cache(async () => {
@@ -9,7 +10,7 @@ export const getBranding = cache(async () => {
   });
   return {
     name: org?.name ?? "Theta",
-    logoUrl: org?.logoUrl ? "/branding/logo" : null,
+    logoUrl: org?.logoUrl ? withBase("/branding/logo") : null,
     primaryColor: org?.primaryColor ?? "#4F46E5",
     accentColor: org?.accentColor ?? "#8B5CF6",
   };

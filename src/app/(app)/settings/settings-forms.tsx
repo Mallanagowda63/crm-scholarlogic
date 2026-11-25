@@ -35,6 +35,7 @@ import {
   uploadLogo,
   type SettingsResult,
 } from "@/server/actions/settings";
+import { withBase } from "@/lib/base-path";
 
 async function report(action: Promise<SettingsResult>, success: string) {
   try {
@@ -618,7 +619,7 @@ function LogoCard({ hasLogo }: { hasLogo: boolean }) {
       <p className="mt-1 mb-3 text-xs text-muted-foreground">PNG, JPG or WebP, up to 1 MB. Square images look best.</p>
       {hasLogo && (
         // eslint-disable-next-line @next/next/no-img-element -- an uploaded file served by our own route
-        <img src="/branding/logo" alt="Current logo" className="mb-3 size-16 rounded-lg border object-contain" />
+        <img src={withBase("/branding/logo")} alt="Current logo" className="mb-3 size-16 rounded-lg border object-contain" />
       )}
       <input
         ref={input}

@@ -12,6 +12,7 @@ import { addDaysToKey, formatKey, formatTime, indiaDateKey } from "@/lib/format"
 import { requireModuleAccess } from "@/lib/session";
 import { cn } from "@/lib/utils";
 import { getDailyReport, isDayKey, reportTotals } from "@/server/daily-report";
+import { withBase } from "@/lib/base-path";
 
 export const metadata: Metadata = { title: "Daily report" };
 
@@ -51,7 +52,7 @@ export default async function DailyReportPage({ searchParams }: Props) {
             >
               <ChevronLeft aria-hidden />
             </Link>
-            <form action="/daily-report" className="flex items-center gap-1">
+            <form action={withBase("/daily-report")} className="flex items-center gap-1">
               <Input type="date" name="date" aria-label="Choose a day" defaultValue={day} max={today} className="h-9 w-40" />
               <Button type="submit" variant="outline" className="h-9">
                 Show

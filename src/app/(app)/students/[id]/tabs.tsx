@@ -44,6 +44,7 @@ import {
   type ActivityRow,
   type Profile,
 } from "@/server/students";
+import { withBase } from "@/lib/base-path";
 
 function Panel({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
@@ -417,7 +418,7 @@ export async function DocumentsTab({ studentId, canEdit }: { studentId: string; 
                   <TableCell>
                     <div className="flex items-center justify-end">
                       <a
-                        href={`/students/${studentId}/documents/${document.id}`}
+                        href={withBase(`/students/${studentId}/documents/${document.id}`)}
                         aria-label={`Download ${document.fileName}`}
                         className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
                       >

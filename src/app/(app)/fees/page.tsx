@@ -14,6 +14,7 @@ import { formatRupees, formatShortDate } from "@/lib/format";
 import { requireModuleAccess } from "@/lib/session";
 import { cn } from "@/lib/utils";
 import { getAwaitingFeePlan, getPlanSummaries, getRecentPayments, startOfIndiaMonth } from "@/server/fees";
+import { withBase } from "@/lib/base-path";
 
 export const metadata: Metadata = { title: "Fees" };
 
@@ -247,7 +248,7 @@ async function PaymentsView({ page, hrefFor }: { page: number; hrefFor: (page: n
                 <TableCell className="w-10">
                   {payment.receipt && (
                     <a
-                      href={`/fees/receipts/${payment.id}`}
+                      href={withBase(`/fees/receipts/${payment.id}`)}
                       aria-label={`Download receipt ${payment.receipt.number}`}
                       className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
                     >

@@ -14,6 +14,7 @@ import { PAYMENT_METHOD_LABELS, summarisePlan } from "@/lib/fees";
 import { formatRupees, formatShortDate, indiaDateKey } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { getFeePlans } from "@/server/students";
+import { withBase } from "@/lib/base-path";
 
 const STATUS = {
   PAID: { label: "Paid", className: "text-emerald-700 dark:text-emerald-400" },
@@ -145,7 +146,7 @@ export async function PaymentsTab({ studentId, canManage }: { studentId: string;
                           </p>
                           {payment.receipt && (
                             <a
-                              href={`/fees/receipts/${payment.id}`}
+                              href={withBase(`/fees/receipts/${payment.id}`)}
                               aria-label={`Download receipt ${payment.receipt.number}`}
                               className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
                             >

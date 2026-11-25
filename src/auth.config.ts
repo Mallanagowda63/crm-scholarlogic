@@ -1,8 +1,12 @@
 import type { NextAuthConfig } from "next-auth";
 
+import { BASE_PATH } from "@/lib/base-path";
+
 /** Edge-safe settings shared with middleware. Must not import Prisma or bcrypt. */
 export const authConfig = {
-  pages: { signIn: "/login" },
+  pages: { signIn: `${BASE_PATH}/login` },
+  // Auth routes live under the base path too (e.g. /crm/api/auth).
+  ...(BASE_PATH ? { basePath: `${BASE_PATH}/api/auth` } : {}),
   session: { strategy: "jwt", maxAge: 60 * 60 * 24 * 7 },
   providers: [],
   callbacks: {
@@ -10,8 +14,8 @@ export const authConfig = {
       // The logo is public because the sign-in page shows it.
       if (nextUrl.pathname === "/login" || nextUrl.pathname === "/branding/logo" || auth?.user) return true;
 
-      const loginUrl = new URL("/login", nextUrl);
-      loginUrl.searchParams.set("callbackUrl", nextUrl.pathname + nextUrl.search);
+      const loginUrl = new URL(`${BASE_PATH}/login`, nextUrl);
+      loginUrl.searchParams.set("callbackUrl", BASE_PATH + nextUrl.pathname + nextUrl.search);
       return Response.redirect(loginUrl);
     },
     jwt({ token, user }) {

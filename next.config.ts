@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Served under a path (e.g. /crm) when NEXT_PUBLIC_BASE_PATH is set at build time.
+  basePath: process.env.NEXT_PUBLIC_BASE_PATH?.replace(/\/+$/, "") || undefined,
   // `npm test` builds separately, so it can run while the dev server is up.
   distDir: process.env.NEXT_DIST_DIR ?? ".next",
   // The badge covers the sidebar collapse button or form buttons, wherever it sits.
