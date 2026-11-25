@@ -77,6 +77,12 @@ const year = (v) => {
   return n >= 1980 && n <= 2035 ? n : undefined;
 };
 const date = (v) => (v ? new Date(v) : undefined);
+/** For day-only columns: the calendar day in India time, at UTC midnight (how Prisma stores @db.Date). */
+const istDay = (v) => {
+  if (!v) return undefined;
+  const t = new Date(new Date(v).getTime() + 330 * 60 * 1000);
+  return new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate()));
+};
 const mode = (v) => (["ONLINE", "OFFLINE", "HYBRID"].includes(v) ? v : undefined);
 const id = (v) => (v ? String(v) : "");
 
@@ -204,7 +210,7 @@ async function syncOnce() {
   // ---- students and leads
   const crmStudents = await db.student.findMany({
     where: { lmsId: { not: null } },
-    select: { id: true, lmsId: true, stageId: true, name: true, email: true, phone: true, city: true, address: true, college: true, degree: true, degreeStream: true, degreeScore: true, passOutYear: true, tenthScore: true, twelfthScore: true, preferredMode: true, joiningDate: true, dateOfBirth: true, courseInterestId: true, lostReason: true, photoUrl: true, sourceId: true },
+    select: { id: true, lmsId: true, stageId: true, deletedAt: true, name: true, email: true, phone: true, city: true, address: true, college: true, degree: true, degreeStream: true, degreeScore: true, passOutYear: true, tenthScore: true, twelfthScore: true, preferredMode: true, joiningDate: true, dateOfBirth: true, courseInterestId: true, lostReason: true, photoUrl: true, sourceId: true },
   });
   const byLmsId = new Map(crmStudents.map((s) => [s.lmsId, s]));
   const enrollments = await db.enrollment.findMany({ select: { id: true, studentId: true, batchId: true, status: true } });
@@ -270,7 +276,7 @@ async function syncOnce() {
       twelfthScore: text(reg?.twelfthPercentage),
       dateOfBirth: parseDay(s.dateOfBirth) ?? parseDay(reg?.dateOfBirth),
       preferredMode: mode(s.enrollment?.mode),
-      joiningDate: date(s.enrollment?.joiningDate),
+      joiningDate: istDay(s.enrollment?.joiningDate),
       courseInterestId: courseIdFor.get(id(s.enrollment?.courseId)),
     });
     const res = await upsertPerson({
@@ -309,6 +315,16 @@ async function syncOnce() {
   // Registration form entries that aren't students yet -> leads
   for (const r of registrations) {
     if (regStudentIds.has(id(r._id)) || r.studentId) continue;
+    if (r.verificationStatus === "VERIFIED") {
+      // Verified means they are a student already (shown above). Hide a lead made from it earlier.
+      const old = byLmsId.get(`reg:${id(r._id)}`);
+      if (old && !old.deletedAt) {
+        await db.student.update({ where: { id: old.id }, data: { deletedAt: new Date() } });
+        old.deletedAt = new Date();
+        n.leads++;
+      }
+      continue;
+    }
     const rejected = r.verificationStatus === "REJECTED";
     const notes = [
       r.requestedCourse && `Course: ${r.requestedCourse}`,
@@ -332,7 +348,7 @@ async function syncOnce() {
         twelfthScore: text(r.twelfthPercentage),
         dateOfBirth: parseDay(r.dateOfBirth),
         preferredMode: mode(r.preferredMode),
-        joiningDate: date(r.joiningDate),
+        joiningDate: istDay(r.joiningDate),
         courseInterestId: courseIdFor.get(id(r.courseId)),
       }),
       stage: rejected ? (byLmsId.has(`reg:${id(r._id)}`) ? LOST : null) : NEW,
