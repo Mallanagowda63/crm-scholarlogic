@@ -19,7 +19,8 @@ export const authConfig = {
       if (path === "/login" || path === "/branding/logo" || auth?.user) return true;
 
       const loginUrl = new URL(`${BASE_PATH}/login`, nextUrl);
-      loginUrl.searchParams.set("callbackUrl", BASE_PATH + path + nextUrl.search);
+      // Without the base path: the login page navigates with the Next router, which adds it.
+      loginUrl.searchParams.set("callbackUrl", path + nextUrl.search);
       return Response.redirect(loginUrl);
     },
     jwt({ token, user }) {

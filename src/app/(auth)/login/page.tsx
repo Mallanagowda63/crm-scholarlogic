@@ -8,13 +8,19 @@ import { ROLE_LABELS } from "@/lib/roles";
 import { getCurrentUser } from "@/lib/session";
 import { BrandStyle } from "@/components/shared/brand-style";
 import { getBranding } from "@/server/branding";
+import { BASE_PATH } from "@/lib/base-path";
 
 export const metadata: Metadata = { title: "Sign in" };
 
 const JOURNEY = ["Enquiry", "Contacted", "Demo class", "Admission", "Fees", "Enrolled"];
 
 /** Only same-site paths are allowed, so a crafted link can't send people to another website. */
-function safeCallbackUrl(value: string | string[] | undefined) {
+function safeCallbackUrl(raw: string | string[] | undefined) {
+  // router.replace and redirect() add the base path (e.g. /crm) themselves, so drop it here to avoid /crm/crm/...
+  const value =
+    typeof raw === "string" && BASE_PATH && (raw === BASE_PATH || raw.startsWith(`${BASE_PATH}/`))
+      ? raw.slice(BASE_PATH.length) || "/dashboard"
+      : raw;
   const isSafe =
     typeof value === "string" &&
     value.startsWith("/") &&
