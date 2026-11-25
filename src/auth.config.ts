@@ -4,8 +4,10 @@ import { BASE_PATH } from "@/lib/base-path";
 
 /** Edge-safe settings shared with middleware. Must not import Prisma or bcrypt. */
 export const authConfig = {
-  // Under a base path the sign-in routes are found from AUTH_URL (e.g. https://scholarlogiclms.in/crm/api/auth).
   pages: { signIn: `${BASE_PATH}/login` },
+  // Next.js strips the base path before the auth route sees the request, so the routes stay at /api/auth
+  // (AUTH_URL, e.g. https://scholarlogiclms.in/crm/api/auth, still gives the public address).
+  ...(BASE_PATH ? { basePath: "/api/auth" } : {}),
   session: { strategy: "jwt", maxAge: 60 * 60 * 24 * 7 },
   providers: [],
   callbacks: {
